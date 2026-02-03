@@ -15,6 +15,7 @@ export default function ResultsPage() {
   const router = useRouter();
   const [formData, setFormData] = useState<FormData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [loadMoreCount, setLoadMoreCount] = useState(0);
 
   useEffect(() => {
@@ -51,7 +52,11 @@ export default function ResultsPage() {
     '';
 
   const handleLoadMore = () => {
-    setLoadMoreCount((prev) => prev + 1);
+    setIsLoadingMore(true);
+    setTimeout(() => {
+      setLoadMoreCount((prev) => prev + 1);
+      setIsLoadingMore(false);
+    }, 1500);
   };
 
   const handleScheduleMeeting = () => {
@@ -124,7 +129,20 @@ export default function ResultsPage() {
 
           {/* Load More / Schedule Button */}
           <div className="mt-8 text-center">
-            {!reachedMaxLoads && hasMoreCases ? (
+            {isLoadingMore ? (
+              <div className="py-4">
+                <div className="flex justify-center gap-2 mb-3">
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
+                      style={{ animationDelay: `${i * 0.15}s` }}
+                    />
+                  ))}
+                </div>
+                <p className="text-sm text-gray-600">事例を探しています...</p>
+              </div>
+            ) : !reachedMaxLoads && hasMoreCases ? (
               <button
                 onClick={handleLoadMore}
                 className="inline-flex items-center px-6 py-3 border-2 border-blue-600 text-blue-600 font-medium rounded-lg hover:bg-blue-50 transition-colors"
