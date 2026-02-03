@@ -8,19 +8,19 @@ export function StepIndicator({ currentStep }: Props) {
       <div className="flex items-center">
         <div
           className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-            currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'
+            currentStep >= 1 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'
           }`}
         >
           1
         </div>
         <div className="w-12 h-1 bg-gray-200 mx-2">
           <div
-            className={`h-full transition-all ${currentStep >= 2 ? 'bg-blue-600 w-full' : 'w-0'}`}
+            className={`h-full transition-all ${currentStep >= 2 ? 'bg-primary w-full' : 'w-0'}`}
           />
         </div>
         <div
           className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-            currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'
+            currentStep >= 2 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'
           }`}
         >
           2

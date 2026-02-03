@@ -19,14 +19,14 @@ export function LoadingScreen() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-b from-red-50 to-white flex items-center justify-center">
       <div className="text-center">
         {/* Animated dots */}
         <div className="flex justify-center gap-2 mb-6">
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="w-3 h-3 bg-blue-600 rounded-full animate-bounce"
+              className="w-3 h-3 bg-primary rounded-full animate-bounce"
               style={{ animationDelay: `${i * 0.15}s` }}
             />
           ))}

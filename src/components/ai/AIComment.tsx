@@ -55,9 +55,9 @@ export function AIComment({ jobCategory, industry, consultationContent }: Props)
       <div className="flex gap-4">
         {/* Avatar placeholder - will be replaced with sales rep photo */}
         <div className="flex-shrink-0">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
             <svg
-              className="w-8 h-8 text-blue-600"
+              className="w-8 h-8 text-primary"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -76,9 +76,9 @@ export function AIComment({ jobCategory, industry, consultationContent }: Props)
         {/* Speech bubble */}
         <div className="flex-1 relative">
           {/* Triangle pointer */}
-          <div className="absolute left-0 top-4 -ml-2 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-r-8 border-r-blue-50" />
+          <div className="absolute left-0 top-4 -ml-2 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-r-8 border-r-red-50" />
 
-          <div className="bg-blue-50 rounded-xl p-4">
+          <div className="bg-red-50 rounded-xl p-4">
             <p className="text-gray-700 whitespace-pre-line text-sm leading-relaxed">{comment}</p>
           </div>
         </div>

@@ -37,7 +37,7 @@ export function Step2BusinessForm({ data, onChange, onBack, onSubmit }: Props) {
               onClick={() => onChange({ ...data, jobCategory: cat.value })}
               className={`p-3 text-sm border rounded-lg transition-colors ${
                 data.jobCategory === cat.value
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  ? 'border-primary bg-red-50 text-primary'
                   : 'border-gray-300 hover:border-gray-400'
               }`}
             >
@@ -51,7 +51,7 @@ export function Step2BusinessForm({ data, onChange, onBack, onSubmit }: Props) {
             value={data.jobCategoryOther || ''}
             onChange={(e) => onChange({ ...data, jobCategoryOther: e.target.value })}
             placeholder="業務内容を入力してください"
-            className="mt-2 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="mt-2 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
           />
         )}
       </div>
@@ -69,7 +69,7 @@ export function Step2BusinessForm({ data, onChange, onBack, onSubmit }: Props) {
               onClick={() => onChange({ ...data, industry: ind.value })}
               className={`p-3 text-sm border rounded-lg transition-colors ${
                 data.industry === ind.value
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  ? 'border-primary bg-red-50 text-primary'
                   : 'border-gray-300 hover:border-gray-400'
               }`}
             >
@@ -83,7 +83,7 @@ export function Step2BusinessForm({ data, onChange, onBack, onSubmit }: Props) {
             value={data.industryOther || ''}
             onChange={(e) => onChange({ ...data, industryOther: e.target.value })}
             placeholder="業界を入力してください"
-            className="mt-2 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="mt-2 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
           />
         )}
       </div>
@@ -100,7 +100,7 @@ export function Step2BusinessForm({ data, onChange, onBack, onSubmit }: Props) {
           onChange={(e) => onChange({ ...data, companyUrl: e.target.value })}
           placeholder="https://example.co.jp"
           disabled={data.noCompanyUrl}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-100"
         />
         <label className="flex items-center mt-2 text-sm text-gray-600">
           <input
@@ -124,7 +124,7 @@ export function Step2BusinessForm({ data, onChange, onBack, onSubmit }: Props) {
           value={data.companyName || ''}
           onChange={(e) => onChange({ ...data, companyName: e.target.value })}
           placeholder="株式会社〇〇"
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
         />
       </div>
 
@@ -139,7 +139,7 @@ export function Step2BusinessForm({ data, onChange, onBack, onSubmit }: Props) {
           onChange={(e) => onChange({ ...data, consultationContent: e.target.value })}
           placeholder="例：経理業務の一部をアウトソースしたい、採用事務を手伝ってほしい など"
           rows={3}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
         />
       </div>
 
@@ -155,7 +155,7 @@ export function Step2BusinessForm({ data, onChange, onBack, onSubmit }: Props) {
         <button
           type="submit"
           disabled={!isValid}
-          className="flex-1 py-3 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+          className="flex-1 py-3 px-4 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
         >
           事例を見る
         </button>

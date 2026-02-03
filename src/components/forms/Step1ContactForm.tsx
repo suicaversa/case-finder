@@ -28,7 +28,7 @@ export function Step1ContactForm({ data, onChange, onNext }: Props) {
           value={data.name}
           onChange={(e) => onChange({ ...data, name: e.target.value })}
           placeholder="やまだ たろう"
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
           required
         />
         <p className="mt-1 text-xs text-gray-500">ひらがな または カタカナでご入力ください</p>
@@ -44,7 +44,7 @@ export function Step1ContactForm({ data, onChange, onNext }: Props) {
           value={data.email}
           onChange={(e) => onChange({ ...data, email: e.target.value })}
           placeholder="example@company.co.jp"
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
           required
         />
       </div>
@@ -59,7 +59,7 @@ export function Step1ContactForm({ data, onChange, onNext }: Props) {
           value={data.phone}
           onChange={(e) => onChange({ ...data, phone: e.target.value })}
           placeholder="03-1234-5678"
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
           required
         />
         <p className="mt-1 text-xs text-gray-500">
@@ -70,7 +70,7 @@ export function Step1ContactForm({ data, onChange, onNext }: Props) {
       <button
         type="submit"
         disabled={!isValid}
-        className="w-full py-3 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+        className="w-full py-3 px-4 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
       >
         次へ
       </button>

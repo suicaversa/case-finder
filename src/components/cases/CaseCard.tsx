@@ -53,7 +53,7 @@ export function CaseCard({ caseStudy }: Props) {
 
         {/* Contract Plan */}
         <div className="pt-3 border-t border-gray-100">
-          <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
+          <span className="inline-block px-3 py-1 bg-red-100 text-primary text-sm font-medium rounded-full">
             {caseStudy.contractPlan}
           </span>
         </div>
