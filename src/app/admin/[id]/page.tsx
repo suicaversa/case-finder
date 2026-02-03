@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { mockInquiries } from '@/data/mockInquiries';
 import { mockCases } from '@/data/mockCases';
 import { JOB_CATEGORIES, INDUSTRIES, InquiryStatus } from '@/types';
+import { generateAIComment } from '@/lib/aiComment';
 
 const statusColors: Record<InquiryStatus, string> = {
   '未対応': 'bg-red-100 text-red-800 border-red-200',
@@ -51,6 +52,31 @@ export default function InquiryDetailPage({ params }: { params: Promise<{ id: st
     INDUSTRIES.find((i) => i.value === value)?.label || value;
 
   const shownCases = mockCases.filter((c) => inquiry.shownCaseIds.includes(c.id));
+  const chatMessages = inquiry.chatMessages ?? [];
+  const aiIntroMessage = generateAIComment({
+    jobCategory: inquiry.jobCategory,
+    industry: inquiry.industry,
+    consultationContent: inquiry.consultationContent,
+  });
+  const fullChatMessages = [
+    {
+      id: `${inquiry.id}-intro`,
+      role: 'assistant' as const,
+      content: aiIntroMessage,
+      createdAt: inquiry.createdAt,
+    },
+    ...chatMessages,
+  ];
+
+  const formatChatTime = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleString('ja-JP', {
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
 
   const handleSave = () => {
     setIsSaving(true);
@@ -168,22 +194,74 @@ export default function InquiryDetailPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
 
+        {/* Chat History */}
+        <div className="bg-white rounded-lg shadow p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">チャット履歴</h2>
+          <div className="space-y-3">
+            {fullChatMessages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm leading-relaxed whitespace-pre-line ${
+                    message.role === 'user'
+                      ? 'bg-primary text-white'
+                      : 'bg-gray-100 text-gray-700'
+                  }`}
+                >
+                  <p>{message.content}</p>
+                  <p
+                    className={`mt-1 text-xs ${
+                      message.role === 'user' ? 'text-red-100' : 'text-gray-400'
+                    }`}
+                  >
+                    {message.role === 'user' ? '利用者' : 'AI'}・{formatChatTime(message.createdAt)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Shown Cases */}
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             紹介された事例 ({shownCases.length}件)
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {shownCases.map((c) => (
-              <div key={c.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                <img
-                  src={`/cases/case-${c.id}.png`}
-                  alt={c.title}
-                  className="w-16 h-16 object-contain bg-white rounded"
-                />
-                <div>
-                  <p className="font-medium text-gray-900">{c.title}</p>
-                  <p className="text-sm text-gray-500">{c.contractPlan}</p>
+              <div key={c.id} className="bg-gray-50 border border-gray-100 rounded-xl p-5">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <img
+                    src={`/cases/case-${c.id}.png`}
+                    alt={c.title}
+                    className="w-full md:w-40 h-32 object-contain bg-white rounded"
+                  />
+                  <div className="flex-1 space-y-3">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                      <p className="text-lg font-semibold text-gray-900">{c.title}</p>
+                      <span className="inline-block px-3 py-1 bg-red-100 text-primary text-sm font-medium rounded-full">
+                        {c.contractPlan}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-gray-600 mb-1">依頼された背景</p>
+                      <p className="text-sm text-gray-600">{c.background}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-gray-600 mb-1">依頼内容</p>
+                      <p className="text-sm text-gray-600">{c.requestedContent}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-gray-600 mb-1">
+                        HELPYOUが実際に行っている業務
+                      </p>
+                      <p className="text-sm text-gray-600 whitespace-pre-line">
+                        {c.actualServices}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}

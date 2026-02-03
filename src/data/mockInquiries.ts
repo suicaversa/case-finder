@@ -15,6 +15,34 @@ export const mockInquiries: Inquiry[] = [
     consultationContent: '経理業務の一部をアウトソースしたいと考えています。月次決算のサポートをお願いしたいです。',
     status: '未対応',
     shownCaseIds: ['1', '4'],
+    chatMessages: [
+      {
+        id: 'chat-001-1',
+        role: 'user',
+        content: '月次決算のサポートはどのくらいの工数になりますか？',
+        createdAt: '2026-02-03T10:35:00',
+      },
+      {
+        id: 'chat-001-2',
+        role: 'assistant',
+        content:
+          '業務量によって変わりますが、月次の仕訳件数や締め日を伺いながら目安の工数をご案内できます。必要であれば担当からお見積りいたします。',
+        createdAt: '2026-02-03T10:35:25',
+      },
+      {
+        id: 'chat-001-3',
+        role: 'user',
+        content: 'セキュリティ面が心配です。',
+        createdAt: '2026-02-03T10:36:10',
+      },
+      {
+        id: 'chat-001-4',
+        role: 'assistant',
+        content:
+          'NDA締結やアクセス権限の管理、作業ログの記録など、情報管理の体制を整えています。詳細は面談時にご説明します。',
+        createdAt: '2026-02-03T10:36:40',
+      },
+    ],
     notes: '',
   },
   {
@@ -31,6 +59,21 @@ export const mockInquiries: Inquiry[] = [
     consultationContent: '採用が急増しており、入社手続きの対応が追いつきません。',
     status: '対応中',
     shownCaseIds: ['2', '6'],
+    chatMessages: [
+      {
+        id: 'chat-002-1',
+        role: 'user',
+        content: '入社手続きのどこまでお願いできますか？',
+        createdAt: '2026-02-03T09:20:00',
+      },
+      {
+        id: 'chat-002-2',
+        role: 'assistant',
+        content:
+          '書類回収、入社案内、アカウント申請の代行など、範囲を柔軟に設計できます。現状のフローを教えていただければ整理します。',
+        createdAt: '2026-02-03T09:20:30',
+      },
+    ],
     notes: '2/3 電話済み。来週打ち合わせ予定。',
   },
   {
@@ -47,6 +90,7 @@ export const mockInquiries: Inquiry[] = [
     consultationContent: '営業資料の作成に時間がかかりすぎています。',
     status: '対応済み',
     shownCaseIds: ['3', '7'],
+    chatMessages: [],
     notes: '2/2 契約締結。チームプラン（月30時間）で開始。',
   },
   {
@@ -63,6 +107,21 @@ export const mockInquiries: Inquiry[] = [
     consultationContent: 'カスタマーサポートの体制を整えたいです。問い合わせが急増しています。',
     status: '未対応',
     shownCaseIds: ['4', '8'],
+    chatMessages: [
+      {
+        id: 'chat-004-1',
+        role: 'user',
+        content: 'FAQの整備もお願いできますか？',
+        createdAt: '2026-02-02T14:25:00',
+      },
+      {
+        id: 'chat-004-2',
+        role: 'assistant',
+        content:
+          'はい、問い合わせ内容を整理しながらFAQ作成・更新まで対応可能です。テンプレートがあればお送りください。',
+        createdAt: '2026-02-02T14:25:20',
+      },
+    ],
     notes: '',
   },
   {
@@ -79,6 +138,21 @@ export const mockInquiries: Inquiry[] = [
     consultationContent: 'SNSマーケティングを強化したいのですが、社内にノウハウがありません。',
     status: '対応中',
     shownCaseIds: ['5'],
+    chatMessages: [
+      {
+        id: 'chat-005-1',
+        role: 'user',
+        content: '投稿頻度はどれくらいが適切ですか？',
+        createdAt: '2026-02-01T11:05:00',
+      },
+      {
+        id: 'chat-005-2',
+        role: 'assistant',
+        content:
+          '目的や媒体によって異なりますが、まずは週2〜3回から始めるケースが多いです。現状の運用状況を伺いながらご提案します。',
+        createdAt: '2026-02-01T11:05:25',
+      },
+    ],
     notes: '2/1 初回ヒアリング完了。提案書作成中。',
   },
 ];

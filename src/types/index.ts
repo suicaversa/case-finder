@@ -21,12 +21,22 @@ export interface FormData extends ContactInfo, BusinessInfo {}
 // Admin types
 export type InquiryStatus = '未対応' | '対応中' | '対応済み';
 
+export type ChatRole = 'user' | 'assistant';
+
+export interface ChatMessage {
+  id: string;
+  role: ChatRole;
+  content: string;
+  createdAt: string;
+}
+
 export interface Inquiry extends FormData {
   id: string;
   createdAt: string;
   status: InquiryStatus;
   shownCaseIds: string[];
   notes: string;
+  chatMessages: ChatMessage[];
 }
 
 // Case study types
