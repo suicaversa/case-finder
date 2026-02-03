@@ -7,17 +7,20 @@ import { Step1ContactForm } from '@/components/forms/Step1ContactForm';
 import { Step2BusinessForm } from '@/components/forms/Step2BusinessForm';
 import { StepIndicator } from '@/components/forms/StepIndicator';
 
+// Default values for testing
 const initialContactInfo: ContactInfo = {
-  name: '',
-  email: '',
-  phone: '',
+  name: 'やまだ たろう',
+  email: 'yamada@example.co.jp',
+  phone: '03-1234-5678',
 };
 
 const initialBusinessInfo: BusinessInfo = {
   jobCategory: '',
   industry: '',
-  companyUrl: '',
+  companyUrl: 'https://example.co.jp',
+  companyName: '株式会社サンプル',
   noCompanyUrl: false,
+  consultationContent: '経理業務の一部をアウトソースしたいと考えています。',
 };
 
 export default function Home() {

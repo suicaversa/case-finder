@@ -24,36 +24,44 @@ export function Step2BusinessForm({ data, onChange, onBack, onSubmit }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Job Category */}
+      {/* Company Name (optional) */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-3">
-          業務カテゴリ <span className="text-red-500">*</span>
+        <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
+          会社名（任意）
         </label>
-        <div className="grid grid-cols-2 gap-2">
-          {JOB_CATEGORIES.map((cat) => (
-            <button
-              key={cat.value}
-              type="button"
-              onClick={() => onChange({ ...data, jobCategory: cat.value })}
-              className={`p-3 text-sm border rounded-lg transition-colors ${
-                data.jobCategory === cat.value
-                  ? 'border-primary bg-red-50 text-primary'
-                  : 'border-gray-300 hover:border-gray-400'
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
-        {data.jobCategory === 'other' && (
+        <input
+          type="text"
+          id="companyName"
+          value={data.companyName || ''}
+          onChange={(e) => onChange({ ...data, companyName: e.target.value })}
+          placeholder="株式会社〇〇"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+        />
+      </div>
+
+      {/* Company URL */}
+      <div>
+        <label htmlFor="companyUrl" className="block text-sm font-medium text-gray-700 mb-1">
+          会社URL {!data.noCompanyUrl && <span className="text-red-500">*</span>}
+        </label>
+        <input
+          type="url"
+          id="companyUrl"
+          value={data.companyUrl}
+          onChange={(e) => onChange({ ...data, companyUrl: e.target.value })}
+          placeholder="https://example.co.jp"
+          disabled={data.noCompanyUrl}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-100"
+        />
+        <label className="flex items-center mt-2 text-sm text-gray-600">
           <input
-            type="text"
-            value={data.jobCategoryOther || ''}
-            onChange={(e) => onChange({ ...data, jobCategoryOther: e.target.value })}
-            placeholder="業務内容を入力してください"
-            className="mt-2 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+            type="checkbox"
+            checked={data.noCompanyUrl}
+            onChange={(e) => onChange({ ...data, noCompanyUrl: e.target.checked, companyUrl: '' })}
+            className="mr-2"
           />
-        )}
+          会社サイトがないため入力を省略する
+        </label>
       </div>
 
       {/* Industry */}
@@ -88,44 +96,36 @@ export function Step2BusinessForm({ data, onChange, onBack, onSubmit }: Props) {
         )}
       </div>
 
-      {/* Company URL */}
+      {/* Job Category */}
       <div>
-        <label htmlFor="companyUrl" className="block text-sm font-medium text-gray-700 mb-1">
-          会社URL {!data.noCompanyUrl && <span className="text-red-500">*</span>}
+        <label className="block text-sm font-medium text-gray-700 mb-3">
+          業務カテゴリ <span className="text-red-500">*</span>
         </label>
-        <input
-          type="url"
-          id="companyUrl"
-          value={data.companyUrl}
-          onChange={(e) => onChange({ ...data, companyUrl: e.target.value })}
-          placeholder="https://example.co.jp"
-          disabled={data.noCompanyUrl}
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-100"
-        />
-        <label className="flex items-center mt-2 text-sm text-gray-600">
+        <div className="grid grid-cols-2 gap-2">
+          {JOB_CATEGORIES.map((cat) => (
+            <button
+              key={cat.value}
+              type="button"
+              onClick={() => onChange({ ...data, jobCategory: cat.value })}
+              className={`p-3 text-sm border rounded-lg transition-colors ${
+                data.jobCategory === cat.value
+                  ? 'border-primary bg-red-50 text-primary'
+                  : 'border-gray-300 hover:border-gray-400'
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+        {data.jobCategory === 'other' && (
           <input
-            type="checkbox"
-            checked={data.noCompanyUrl}
-            onChange={(e) => onChange({ ...data, noCompanyUrl: e.target.checked, companyUrl: '' })}
-            className="mr-2"
+            type="text"
+            value={data.jobCategoryOther || ''}
+            onChange={(e) => onChange({ ...data, jobCategoryOther: e.target.value })}
+            placeholder="業務内容を入力してください"
+            className="mt-2 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
           />
-          会社サイトがないため入力を省略する
-        </label>
-      </div>
-
-      {/* Company Name (optional) */}
-      <div>
-        <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
-          会社名（任意）
-        </label>
-        <input
-          type="text"
-          id="companyName"
-          value={data.companyName || ''}
-          onChange={(e) => onChange({ ...data, companyName: e.target.value })}
-          placeholder="株式会社〇〇"
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-        />
+        )}
       </div>
 
       {/* Consultation Content (optional) */}
