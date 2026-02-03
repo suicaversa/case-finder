@@ -56,16 +56,59 @@ export const mockCases: CaseStudy[] = [
     jobCategories: ['marketing'],
     industries: ['real-estate', 'service'],
   },
+  {
+    id: '6',
+    title: '給与計算・社会保険手続きの代行',
+    background: '従業員50名規模の製造業で、総務担当者が退職。給与計算や社会保険手続きを引き継げる人材がいない状況でした。',
+    requestedContent: '給与計算と社会保険関連の手続きを丸ごと任せたい。',
+    actualServices: '・給与計算・明細発行\n・社会保険手続き\n・年末調整対応\n・勤怠データ集計',
+    contractPlan: 'チームプラン（月40時間）',
+    imageUrl: '/mock/case-hr2.svg',
+    jobCategories: ['hr', 'accounting'],
+    industries: ['manufacturing', 'service'],
+  },
+  {
+    id: '7',
+    title: '請求書発行・入金管理の効率化',
+    background: 'ECサイトを運営する企業で、取引先が増加し請求業務が煩雑化。ミスや遅延が発生するようになっていました。',
+    requestedContent: '請求書発行から入金確認までの一連の業務を代行してほしい。',
+    actualServices: '・請求書作成・発行\n・入金消込\n・督促対応\n・売掛金管理表作成',
+    contractPlan: 'チームプラン（月25時間）',
+    imageUrl: '/mock/case-accounting2.svg',
+    jobCategories: ['accounting', 'sales-admin'],
+    industries: ['ec-retail', 'it-web'],
+  },
+  {
+    id: '8',
+    title: 'ITヘルプデスクの外部委託',
+    background: '急成長中のスタートアップで、社内のIT問い合わせが情シス担当1名に集中。本来の業務に支障が出ていました。',
+    requestedContent: '社内からのIT関連問い合わせの一次対応を任せたい。',
+    actualServices: '・社内問い合わせ対応\n・PC・アカウント設定サポート\n・マニュアル作成・更新\n・問い合わせ履歴管理',
+    contractPlan: 'チームプラン（月60時間）',
+    imageUrl: '/mock/case-it.svg',
+    jobCategories: ['it', 'customer-support'],
+    industries: ['it-web', 'service'],
+  },
 ];
 
-// Simple matching function for mock
+// Get matching cases with support for pagination
 export function findMatchingCases(jobCategory: string, industry: string): CaseStudy[] {
-  const matches = mockCases.filter(
-    (c) => c.jobCategories.includes(jobCategory) || c.industries.includes(industry)
+  // Prioritize exact matches, then partial matches
+  const exactMatches = mockCases.filter(
+    (c) => c.jobCategories.includes(jobCategory) && c.industries.includes(industry)
   );
-  // Return at least 2 cases even if no match
-  if (matches.length === 0) {
-    return mockCases.slice(0, 2);
-  }
-  return matches;
+  const partialMatches = mockCases.filter(
+    (c) =>
+      (c.jobCategories.includes(jobCategory) || c.industries.includes(industry)) &&
+      !exactMatches.includes(c)
+  );
+  const remaining = mockCases.filter(
+    (c) => !exactMatches.includes(c) && !partialMatches.includes(c)
+  );
+
+  // Return ordered list (exact > partial > remaining)
+  const result = [...exactMatches, ...partialMatches, ...remaining];
+
+  // Ensure we have at least 8 cases for pagination demo
+  return result.slice(0, 8);
 }

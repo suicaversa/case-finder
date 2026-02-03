@@ -4,30 +4,43 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FormData, JOB_CATEGORIES, INDUSTRIES } from '@/types';
 import { CaseCard } from '@/components/cases/CaseCard';
+import { LoadingScreen } from '@/components/ui/LoadingScreen';
+import { AIComment } from '@/components/ai/AIComment';
 import { findMatchingCases } from '@/data/mockCases';
+
+const CASES_PER_PAGE = 2;
+const MAX_LOAD_MORE_CLICKS = 3;
 
 export default function ResultsPage() {
   const router = useRouter();
   const [formData, setFormData] = useState<FormData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadMoreCount, setLoadMoreCount] = useState(0);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('caseFinderFormData');
     if (stored) {
       setFormData(JSON.parse(stored));
+      // Simulate AI generation time
+      const timer = setTimeout(() => {
+        setIsLoading(false);
+      }, 3000);
+      return () => clearTimeout(timer);
     } else {
       router.push('/');
     }
   }, [router]);
 
-  if (!formData) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
+  if (!formData || isLoading) {
+    return <LoadingScreen />;
   }
 
-  const matchingCases = findMatchingCases(formData.jobCategory, formData.industry);
+  const allMatchingCases = findMatchingCases(formData.jobCategory, formData.industry);
+  const visibleCasesCount = CASES_PER_PAGE + loadMoreCount * CASES_PER_PAGE;
+  const visibleCases = allMatchingCases.slice(0, visibleCasesCount);
+  const hasMoreCases = visibleCasesCount < allMatchingCases.length;
+  const reachedMaxLoads = loadMoreCount >= MAX_LOAD_MORE_CLICKS;
+
   const jobCategoryLabel =
     JOB_CATEGORIES.find((c) => c.value === formData.jobCategory)?.label ||
     formData.jobCategoryOther ||
@@ -36,6 +49,15 @@ export default function ResultsPage() {
     INDUSTRIES.find((i) => i.value === formData.industry)?.label ||
     formData.industryOther ||
     '';
+
+  const handleLoadMore = () => {
+    setLoadMoreCount((prev) => prev + 1);
+  };
+
+  const handleScheduleMeeting = () => {
+    // Mock: In production, this would link to a scheduling service
+    alert('外部のスケジュール調整サービスに遷移します（モック）');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -84,19 +106,74 @@ export default function ResultsPage() {
           </div>
         </section>
 
+        {/* AI Comment Section */}
+        <AIComment
+          jobCategory={formData.jobCategory}
+          industry={formData.industry}
+          consultationContent={formData.consultationContent}
+        />
+
         {/* Case Studies Section */}
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            近い事例 ({matchingCases.length}件)
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">近い事例</h2>
           <div className="grid md:grid-cols-2 gap-6">
-            {matchingCases.map((caseStudy) => (
+            {visibleCases.map((caseStudy) => (
               <CaseCard key={caseStudy.id} caseStudy={caseStudy} />
             ))}
           </div>
+
+          {/* Load More / Schedule Button */}
+          <div className="mt-8 text-center">
+            {!reachedMaxLoads && hasMoreCases ? (
+              <button
+                onClick={handleLoadMore}
+                className="inline-flex items-center px-6 py-3 border-2 border-blue-600 text-blue-600 font-medium rounded-lg hover:bg-blue-50 transition-colors"
+              >
+                <svg
+                  className="w-5 h-5 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  />
+                </svg>
+                更に事例を探す
+              </button>
+            ) : (
+              <div className="bg-gray-100 rounded-xl p-6">
+                <p className="text-gray-700 mb-4">
+                  これ以上の事例は、営業担当から詳しくご説明させてください
+                </p>
+                <button
+                  onClick={handleScheduleMeeting}
+                  className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <svg
+                    className="w-5 h-5 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                  営業担当と日程を調整する
+                </button>
+              </div>
+            )}
+          </div>
         </section>
 
-        {/* CTA Section */}
+        {/* Bottom CTA Section */}
         <section className="bg-blue-600 rounded-xl p-8 text-center text-white">
           <h2 className="text-xl font-bold mb-2">
             この事例について詳しく聞きたい方へ
@@ -105,10 +182,7 @@ export default function ResultsPage() {
             営業担当が御社の状況に合わせて、詳しくご説明いたします
           </p>
           <button
-            onClick={() => {
-              // Mock: In production, this would link to a scheduling service
-              alert('外部のスケジュール調整サービスに遷移します（モック）');
-            }}
+            onClick={handleScheduleMeeting}
             className="inline-block px-8 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors"
           >
             打ち合わせ日程を調整する
