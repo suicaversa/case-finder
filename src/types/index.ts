@@ -18,6 +18,17 @@ export interface BusinessInfo {
 
 export interface FormData extends ContactInfo, BusinessInfo {}
 
+// Admin types
+export type InquiryStatus = '未対応' | '対応中' | '対応済み';
+
+export interface Inquiry extends FormData {
+  id: string;
+  createdAt: string;
+  status: InquiryStatus;
+  shownCaseIds: string[];
+  notes: string;
+}
+
 // Case study types
 export interface CaseStudy {
   id: string;
