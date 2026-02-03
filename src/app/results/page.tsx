@@ -89,7 +89,7 @@ export default function ResultsPage() {
           </div>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <span className="text-gray-500">業務カテゴリ：</span>
+              <span className="text-gray-500">お困りの業務：</span>
               <span className="text-gray-900 ml-1">{jobCategoryLabel}</span>
             </div>
             <div>

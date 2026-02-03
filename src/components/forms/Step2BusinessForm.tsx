@@ -99,7 +99,7 @@ export function Step2BusinessForm({ data, onChange, onBack, onSubmit }: Props) {
       {/* Job Category */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-3">
-          業務カテゴリ <span className="text-red-500">*</span>
+          お困りの業務の種類 <span className="text-red-500">*</span>
         </label>
         <div className="grid grid-cols-2 gap-2">
           {JOB_CATEGORIES.map((cat) => (
