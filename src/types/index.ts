@@ -1,0 +1,54 @@
+// Form data types
+export interface ContactInfo {
+  name: string;
+  email: string;
+  phone: string;
+}
+
+export interface BusinessInfo {
+  jobCategory: string;
+  jobCategoryOther?: string;
+  industry: string;
+  industryOther?: string;
+  companyUrl: string;
+  noCompanyUrl: boolean;
+  companyName?: string;
+  consultationContent?: string;
+}
+
+export interface FormData extends ContactInfo, BusinessInfo {}
+
+// Case study types
+export interface CaseStudy {
+  id: string;
+  title: string;
+  background: string;
+  requestedContent: string;
+  actualServices: string;
+  contractPlan: string;
+  imageUrl: string;
+  jobCategories: string[];
+  industries: string[];
+}
+
+// Constants
+export const JOB_CATEGORIES = [
+  { value: 'accounting', label: '経理・会計' },
+  { value: 'hr', label: '人事・労務' },
+  { value: 'sales-admin', label: '営業事務' },
+  { value: 'customer-support', label: 'カスタマーサポート' },
+  { value: 'it', label: 'IT / 情シス' },
+  { value: 'marketing', label: 'マーケティング支援' },
+  { value: 'other', label: 'その他' },
+] as const;
+
+export const INDUSTRIES = [
+  { value: 'it-web', label: 'IT / Web' },
+  { value: 'ec-retail', label: 'EC / 小売' },
+  { value: 'manufacturing', label: '製造' },
+  { value: 'service', label: 'サービス' },
+  { value: 'real-estate', label: '不動産' },
+  { value: 'healthcare', label: '医療・介護' },
+  { value: 'education', label: '教育' },
+  { value: 'other', label: 'その他' },
+] as const;
