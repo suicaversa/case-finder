@@ -10,8 +10,7 @@ export interface BusinessInfo {
   jobCategoryOther?: string;
   industry: string;
   industryOther?: string;
-  companyUrl: string;
-  noCompanyUrl: boolean;
+  companyUrl?: string;
   companyName?: string;
   consultationContent?: string;
 }
@@ -28,6 +27,7 @@ export interface ChatMessage {
   role: ChatRole;
   content: string;
   createdAt: string;
+  imageUrl?: string;
 }
 
 export interface Inquiry extends FormData {

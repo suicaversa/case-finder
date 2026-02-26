@@ -1,13 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { ContactInfo, BusinessInfo, FormData } from '@/types';
-import { Step1ContactForm } from '@/components/forms/Step1ContactForm';
-import { Step2BusinessForm } from '@/components/forms/Step2BusinessForm';
+import { Step1BusinessForm } from '@/components/forms/Step1ContactForm';
+import { Step2ContactForm } from '@/components/forms/Step2BusinessForm';
 import { StepIndicator } from '@/components/forms/StepIndicator';
 
-// Default values for testing
+// テスト用の初期値（本番ではすべて空にする）
 const initialContactInfo: ContactInfo = {
   name: 'やまだ たろう',
   email: 'yamada@example.co.jp',
@@ -15,11 +15,10 @@ const initialContactInfo: ContactInfo = {
 };
 
 const initialBusinessInfo: BusinessInfo = {
-  jobCategory: '',
-  industry: '',
+  jobCategory: 'accounting',
+  industry: 'it-web',
   companyUrl: 'https://example.co.jp',
   companyName: '株式会社サンプル',
-  noCompanyUrl: false,
   consultationContent: '経理業務の一部をアウトソースしたいと考えています。',
 };
 
@@ -28,12 +27,40 @@ export default function Home() {
   const [step, setStep] = useState<1 | 2>(1);
   const [contactInfo, setContactInfo] = useState<ContactInfo>(initialContactInfo);
   const [businessInfo, setBusinessInfo] = useState<BusinessInfo>(initialBusinessInfo);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    const formData: FormData = { ...contactInfo, ...businessInfo };
-    // Store in sessionStorage for the results page
-    sessionStorage.setItem('caseFinderFormData', JSON.stringify(formData));
-    router.push('/results');
+  const hasUnsavedChanges = useCallback(() => {
+    const businessChanged =
+      businessInfo.jobCategory !== initialBusinessInfo.jobCategory ||
+      businessInfo.industry !== initialBusinessInfo.industry;
+    const contactChanged =
+      contactInfo.name !== initialContactInfo.name ||
+      contactInfo.email !== initialContactInfo.email ||
+      contactInfo.phone !== initialContactInfo.phone;
+    return businessChanged || contactChanged;
+  }, [contactInfo, businessInfo]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges()) {
+        e.preventDefault();
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const formData: FormData = { ...contactInfo, ...businessInfo };
+      sessionStorage.setItem('caseFinderFormData', JSON.stringify(formData));
+      // Clear previous inquiry ID so a new one is created for the new submission
+      sessionStorage.removeItem('caseFinderInquiryId');
+      router.push('/results');
+    } catch {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -57,24 +84,27 @@ export default function Home() {
           {step === 1 ? (
             <>
               <h2 className="text-lg font-semibold text-gray-900 mb-6">
-                連絡先を入力してください
+                ご相談内容を教えてください
               </h2>
-              <Step1ContactForm
-                data={contactInfo}
-                onChange={setContactInfo}
+              <Step1BusinessForm
+                data={businessInfo}
+                onChange={setBusinessInfo}
                 onNext={() => setStep(2)}
               />
             </>
           ) : (
             <>
               <h2 className="text-lg font-semibold text-gray-900 mb-6">
-                業務・会社情報を入力してください
+                お客様情報を入力してください
               </h2>
-              <Step2BusinessForm
-                data={businessInfo}
-                onChange={setBusinessInfo}
+              <Step2ContactForm
+                contactData={contactInfo}
+                businessData={businessInfo}
+                onContactChange={setContactInfo}
+                onBusinessChange={setBusinessInfo}
                 onBack={() => setStep(1)}
                 onSubmit={handleSubmit}
+                isSubmitting={isSubmitting}
               />
             </>
           )}

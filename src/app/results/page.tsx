@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { FormData, JOB_CATEGORIES, INDUSTRIES } from '@/types';
 import { CaseCard } from '@/components/cases/CaseCard';
@@ -17,11 +17,71 @@ export default function ResultsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [loadMoreCount, setLoadMoreCount] = useState(0);
+  const [inquiryId, setInquiryId] = useState<string | null>(null);
+  const inquiryCreatedRef = useRef(false);
+
+  // Create inquiry in DB when form data is loaded
+  const createInquiry = useCallback(async (data: FormData, shownCaseIds: string[]) => {
+    // Prevent duplicate creation
+    if (inquiryCreatedRef.current) return;
+    inquiryCreatedRef.current = true;
+
+    try {
+      const res = await fetch('/api/inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          companyName: data.companyName,
+          companyUrl: data.companyUrl,
+          jobCategory: data.jobCategory,
+          jobCategoryOther: data.jobCategoryOther,
+          industry: data.industry,
+          industryOther: data.industryOther,
+          consultationContent: data.consultationContent,
+          shownCaseIds,
+        }),
+      });
+
+      if (!res.ok) {
+        console.error('Failed to create inquiry:', res.status);
+        inquiryCreatedRef.current = false;
+        return;
+      }
+
+      const inquiry = await res.json();
+      setInquiryId(inquiry.id);
+
+      // Store the inquiryId in sessionStorage for reference
+      sessionStorage.setItem('caseFinderInquiryId', inquiry.id);
+    } catch (err) {
+      console.error('Failed to create inquiry:', err);
+      inquiryCreatedRef.current = false;
+    }
+  }, []);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('caseFinderFormData');
+    // Check if an inquiry was already created for this session
+    const existingInquiryId = sessionStorage.getItem('caseFinderInquiryId');
+
     if (stored) {
-      setFormData(JSON.parse(stored));
+      const parsedData: FormData = JSON.parse(stored);
+      setFormData(parsedData);
+
+      if (existingInquiryId) {
+        // Reuse existing inquiry ID (e.g. user navigated back and forward)
+        setInquiryId(existingInquiryId);
+        inquiryCreatedRef.current = true;
+      } else {
+        // Get the case IDs that will be shown initially
+        const matchingCases = findMatchingCases(parsedData.jobCategory, parsedData.industry);
+        const initialCaseIds = matchingCases.slice(0, CASES_PER_PAGE).map((c) => c.id);
+        createInquiry(parsedData, initialCaseIds);
+      }
+
       // Simulate AI generation time
       const timer = setTimeout(() => {
         setIsLoading(false);
@@ -30,7 +90,21 @@ export default function ResultsPage() {
     } else {
       router.push('/');
     }
-  }, [router]);
+  }, [router, createInquiry]);
+
+  // Update shownCaseIds when user loads more cases
+  const updateShownCaseIds = useCallback(async (caseIds: string[]) => {
+    if (!inquiryId) return;
+    try {
+      await fetch(`/api/inquiries/${inquiryId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shownCaseIds: caseIds }),
+      });
+    } catch (err) {
+      console.error('Failed to update shownCaseIds:', err);
+    }
+  }, [inquiryId]);
 
   if (!formData || isLoading) {
     return <LoadingScreen />;
@@ -54,8 +128,14 @@ export default function ResultsPage() {
   const handleLoadMore = () => {
     setIsLoadingMore(true);
     setTimeout(() => {
-      setLoadMoreCount((prev) => prev + 1);
+      const newCount = loadMoreCount + 1;
+      setLoadMoreCount(newCount);
       setIsLoadingMore(false);
+
+      // Update the shown case IDs in DB
+      const newVisibleCount = CASES_PER_PAGE + newCount * CASES_PER_PAGE;
+      const newCaseIds = allMatchingCases.slice(0, newVisibleCount).map((c) => c.id);
+      updateShownCaseIds(newCaseIds);
     }, 1500);
   };
 
@@ -116,6 +196,7 @@ export default function ResultsPage() {
           jobCategory={formData.jobCategory}
           industry={formData.industry}
           consultationContent={formData.consultationContent}
+          inquiryId={inquiryId}
         />
 
         {/* Case Studies Section */}
@@ -123,7 +204,13 @@ export default function ResultsPage() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">近い事例</h2>
           <div className="grid md:grid-cols-2 gap-6">
             {visibleCases.map((caseStudy) => (
-              <CaseCard key={caseStudy.id} caseStudy={caseStudy} />
+              <CaseCard
+                key={caseStudy.id}
+                caseStudy={caseStudy}
+                jobCategory={formData.jobCategory}
+                industry={formData.industry}
+                consultationContent={formData.consultationContent}
+              />
             ))}
           </div>
 

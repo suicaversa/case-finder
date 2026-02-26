@@ -9,7 +9,7 @@ export const mockInquiries: Inquiry[] = [
     phone: '03-1234-5678',
     companyName: '株式会社サンプル',
     companyUrl: 'https://example.co.jp',
-    noCompanyUrl: false,
+
     jobCategory: 'accounting',
     industry: 'it-web',
     consultationContent: '経理業務の一部をアウトソースしたいと考えています。月次決算のサポートをお願いしたいです。',
@@ -53,7 +53,7 @@ export const mockInquiries: Inquiry[] = [
     phone: '06-9876-5432',
     companyName: '小売株式会社',
     companyUrl: 'https://retail.co.jp',
-    noCompanyUrl: false,
+
     jobCategory: 'hr',
     industry: 'ec-retail',
     consultationContent: '採用が急増しており、入社手続きの対応が追いつきません。',
@@ -84,7 +84,7 @@ export const mockInquiries: Inquiry[] = [
     phone: '052-111-2222',
     companyName: '製造工業株式会社',
     companyUrl: 'https://manufacturing.jp',
-    noCompanyUrl: false,
+
     jobCategory: 'sales-admin',
     industry: 'manufacturing',
     consultationContent: '営業資料の作成に時間がかかりすぎています。',
@@ -101,7 +101,7 @@ export const mockInquiries: Inquiry[] = [
     phone: '03-5555-6666',
     companyName: 'スタートアップ株式会社',
     companyUrl: 'https://startup.io',
-    noCompanyUrl: false,
+
     jobCategory: 'customer-support',
     industry: 'it-web',
     consultationContent: 'カスタマーサポートの体制を整えたいです。問い合わせが急増しています。',
@@ -132,7 +132,7 @@ export const mockInquiries: Inquiry[] = [
     phone: '03-7777-8888',
     companyName: '不動産株式会社',
     companyUrl: 'https://realestate.co.jp',
-    noCompanyUrl: false,
+
     jobCategory: 'marketing',
     industry: 'real-estate',
     consultationContent: 'SNSマーケティングを強化したいのですが、社内にノウハウがありません。',

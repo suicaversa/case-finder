@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, use } from 'react';
+import { useState, useEffect, useCallback, use } from 'react';
 import Link from 'next/link';
-import { mockInquiries } from '@/data/mockInquiries';
 import { mockCases } from '@/data/mockCases';
-import { JOB_CATEGORIES, INDUSTRIES, InquiryStatus } from '@/types';
+import { JOB_CATEGORIES, INDUSTRIES, InquiryStatus, Inquiry } from '@/types';
 import { generateAIComment } from '@/lib/aiComment';
 
 const statusColors: Record<InquiryStatus, string> = {
@@ -15,24 +14,42 @@ const statusColors: Record<InquiryStatus, string> = {
 
 export default function InquiryDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const inquiry = mockInquiries.find((inq) => inq.id === id);
+  const [inquiry, setInquiry] = useState<Inquiry | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [status, setStatus] = useState<InquiryStatus>(inquiry?.status || '未対応');
-  const [notes, setNotes] = useState(inquiry?.notes || '');
+  const [status, setStatus] = useState<InquiryStatus>('未対応');
+  const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
-  if (!inquiry) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600 mb-4">問い合わせが見つかりません</p>
-          <Link href="/admin" className="text-primary hover:underline">
-            一覧に戻る
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const fetchInquiry = useCallback(async () => {
+    try {
+      setError(null);
+      const res = await fetch(`/api/inquiries/${id}`);
+      if (!res.ok) {
+        if (res.status === 404) {
+          setError('問い合わせが見つかりません。');
+        } else {
+          throw new Error(`API error: ${res.status}`);
+        }
+        return;
+      }
+      const data: Inquiry = await res.json();
+      setInquiry(data);
+      setStatus(data.status);
+      setNotes(data.notes || '');
+    } catch (err) {
+      console.error('Failed to fetch inquiry:', err);
+      setError('問い合わせデータの取得に失敗しました。');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    fetchInquiry();
+  }, [fetchInquiry]);
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -50,6 +67,62 @@ export default function InquiryDetailPage({ params }: { params: Promise<{ id: st
 
   const getIndustryLabel = (value: string) =>
     INDUSTRIES.find((i) => i.value === value)?.label || value;
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    setSaveMessage(null);
+    try {
+      const res = await fetch(`/api/inquiries/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, notes }),
+      });
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      const updated: Inquiry = await res.json();
+      setInquiry(updated);
+      setSaveMessage('保存しました');
+      setTimeout(() => setSaveMessage(null), 3000);
+    } catch (err) {
+      console.error('Failed to save:', err);
+      setSaveMessage('保存に失敗しました');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="flex justify-center gap-2 mb-3">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="w-2 h-2 bg-primary rounded-full animate-bounce"
+                style={{ animationDelay: `${i * 0.15}s` }}
+              />
+            ))}
+          </div>
+          <p className="text-sm text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state / Not found
+  if (error || !inquiry) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">{error || '問い合わせが見つかりません'}</p>
+          <Link href="/admin" className="text-primary hover:underline">
+            一覧に戻る
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const shownCases = mockCases.filter((c) => inquiry.shownCaseIds.includes(c.id));
   const chatMessages = inquiry.chatMessages ?? [];
@@ -76,15 +149,6 @@ export default function InquiryDetailPage({ params }: { params: Promise<{ id: st
       hour: '2-digit',
       minute: '2-digit',
     });
-  };
-
-  const handleSave = () => {
-    setIsSaving(true);
-    // Mock save - in production this would call an API
-    setTimeout(() => {
-      setIsSaving(false);
-      alert('保存しました（モック）');
-    }, 500);
   };
 
   return (
@@ -196,32 +260,38 @@ export default function InquiryDetailPage({ params }: { params: Promise<{ id: st
 
         {/* Chat History */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">チャット履歴</h2>
-          <div className="space-y-3">
-            {fullChatMessages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            チャット履歴 ({chatMessages.length > 0 ? `${chatMessages.length}件のメッセージ` : 'メッセージなし'})
+          </h2>
+          {fullChatMessages.length > 0 ? (
+            <div className="space-y-3">
+              {fullChatMessages.map((message) => (
                 <div
-                  className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm leading-relaxed whitespace-pre-line ${
-                    message.role === 'user'
-                      ? 'bg-primary text-white'
-                      : 'bg-gray-100 text-gray-700'
-                  }`}
+                  key={message.id}
+                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <p>{message.content}</p>
-                  <p
-                    className={`mt-1 text-xs ${
-                      message.role === 'user' ? 'text-red-100' : 'text-gray-400'
+                  <div
+                    className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm leading-relaxed whitespace-pre-line ${
+                      message.role === 'user'
+                        ? 'bg-primary text-white'
+                        : 'bg-gray-100 text-gray-700'
                     }`}
                   >
-                    {message.role === 'user' ? '利用者' : 'AI'}・{formatChatTime(message.createdAt)}
-                  </p>
+                    <p>{message.content}</p>
+                    <p
+                      className={`mt-1 text-xs ${
+                        message.role === 'user' ? 'text-red-100' : 'text-gray-400'
+                      }`}
+                    >
+                      {message.role === 'user' ? '利用者' : 'AI'}・{formatChatTime(message.createdAt)}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">チャット履歴はありません。</p>
+          )}
         </div>
 
         {/* Shown Cases */}
@@ -229,43 +299,47 @@ export default function InquiryDetailPage({ params }: { params: Promise<{ id: st
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             紹介された事例 ({shownCases.length}件)
           </h2>
-          <div className="space-y-4">
-            {shownCases.map((c) => (
-              <div key={c.id} className="bg-gray-50 border border-gray-100 rounded-xl p-5">
-                <div className="flex flex-col md:flex-row gap-4">
-                  <img
-                    src={`/cases/case-${c.id}.png`}
-                    alt={c.title}
-                    className="w-full md:w-40 h-32 object-contain bg-white rounded"
-                  />
-                  <div className="flex-1 space-y-3">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                      <p className="text-lg font-semibold text-gray-900">{c.title}</p>
-                      <span className="inline-block px-3 py-1 bg-red-100 text-primary text-sm font-medium rounded-full">
-                        {c.contractPlan}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-gray-600 mb-1">依頼された背景</p>
-                      <p className="text-sm text-gray-600">{c.background}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-gray-600 mb-1">依頼内容</p>
-                      <p className="text-sm text-gray-600">{c.requestedContent}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-gray-600 mb-1">
-                        HELPYOUが実際に行っている業務
-                      </p>
-                      <p className="text-sm text-gray-600 whitespace-pre-line">
-                        {c.actualServices}
-                      </p>
+          {shownCases.length > 0 ? (
+            <div className="space-y-4">
+              {shownCases.map((c) => (
+                <div key={c.id} className="bg-gray-50 border border-gray-100 rounded-xl p-5">
+                  <div className="flex flex-col md:flex-row gap-4">
+                    <img
+                      src={`/cases/case-${c.id}.png`}
+                      alt={c.title}
+                      className="w-full md:w-40 h-32 object-contain bg-white rounded"
+                    />
+                    <div className="flex-1 space-y-3">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                        <p className="text-lg font-semibold text-gray-900">{c.title}</p>
+                        <span className="inline-block px-3 py-1 bg-red-100 text-primary text-sm font-medium rounded-full">
+                          {c.contractPlan}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-gray-600 mb-1">依頼された背景</p>
+                        <p className="text-sm text-gray-600">{c.background}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-gray-600 mb-1">依頼内容</p>
+                        <p className="text-sm text-gray-600">{c.requestedContent}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-gray-600 mb-1">
+                          HELPYOUが実際に行っている業務
+                        </p>
+                        <p className="text-sm text-gray-600 whitespace-pre-line">
+                          {c.actualServices}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">紹介された事例はありません。</p>
+          )}
         </div>
 
         {/* Notes */}
@@ -281,7 +355,16 @@ export default function InquiryDetailPage({ params }: { params: Promise<{ id: st
         </div>
 
         {/* Save Button */}
-        <div className="flex justify-end">
+        <div className="flex items-center justify-end gap-4">
+          {saveMessage && (
+            <span
+              className={`text-sm ${
+                saveMessage.includes('失敗') ? 'text-red-600' : 'text-green-600'
+              }`}
+            >
+              {saveMessage}
+            </span>
+          )}
           <button
             onClick={handleSave}
             disabled={isSaving}

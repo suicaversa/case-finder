@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { mockInquiries } from '@/data/mockInquiries';
-import { JOB_CATEGORIES, INDUSTRIES, InquiryStatus } from '@/types';
+import { JOB_CATEGORIES, INDUSTRIES, InquiryStatus, Inquiry } from '@/types';
 
 const statusColors: Record<InquiryStatus, string> = {
   '未対応': 'bg-red-100 text-red-800',
@@ -12,11 +11,33 @@ const statusColors: Record<InquiryStatus, string> = {
 };
 
 export default function AdminPage() {
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<InquiryStatus | 'all'>('all');
 
+  const fetchInquiries = useCallback(async () => {
+    try {
+      setError(null);
+      const res = await fetch('/api/inquiries');
+      if (!res.ok) throw new Error(`API error: ${res.status}`);
+      const data = await res.json();
+      setInquiries(data);
+    } catch (err) {
+      console.error('Failed to fetch inquiries:', err);
+      setError('問い合わせデータの取得に失敗しました。');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchInquiries();
+  }, [fetchInquiries]);
+
   const filteredInquiries = statusFilter === 'all'
-    ? mockInquiries
-    : mockInquiries.filter((inq) => inq.status === statusFilter);
+    ? inquiries
+    : inquiries.filter((inq) => inq.status === statusFilter);
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -71,72 +92,117 @@ export default function AdminPage() {
           </span>
         </div>
 
-        {/* Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  受付日時
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  担当者名
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  メールアドレス
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  電話番号
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  お困りの業務
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  業界
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  ステータス
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  操作
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {filteredInquiries.map((inquiry) => (
-                <tr key={inquiry.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm text-gray-900">
-                    {formatDate(inquiry.createdAt)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-900">{inquiry.name}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{inquiry.email}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{inquiry.phone}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {getJobCategoryLabel(inquiry.jobCategory)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {getIndustryLabel(inquiry.industry)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${statusColors[inquiry.status]}`}
-                    >
-                      {inquiry.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/admin/${inquiry.id}`}
-                      className="text-sm text-primary hover:underline"
-                    >
-                      詳細
-                    </Link>
-                  </td>
-                </tr>
+        {/* Loading State */}
+        {isLoading && (
+          <div className="bg-white rounded-lg shadow p-12 text-center">
+            <div className="flex justify-center gap-2 mb-3">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="w-2 h-2 bg-primary rounded-full animate-bounce"
+                  style={{ animationDelay: `${i * 0.15}s` }}
+                />
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
+            <p className="text-sm text-gray-600">読み込み中...</p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && !isLoading && (
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <p className="text-red-600 mb-4">{error}</p>
+            <button
+              onClick={() => {
+                setIsLoading(true);
+                fetchInquiries();
+              }}
+              className="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary-dark transition-colors"
+            >
+              再読み込み
+            </button>
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && !error && filteredInquiries.length === 0 && (
+          <div className="bg-white rounded-lg shadow p-12 text-center">
+            <p className="text-gray-500">
+              {statusFilter === 'all'
+                ? '問い合わせがありません。'
+                : `「${statusFilter}」の問い合わせはありません。`}
+            </p>
+          </div>
+        )}
+
+        {/* Table */}
+        {!isLoading && !error && filteredInquiries.length > 0 && (
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    受付日時
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    担当者名
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    メールアドレス
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    電話番号
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    お困りの業務
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    業界
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    ステータス
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                    操作
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {filteredInquiries.map((inquiry) => (
+                  <tr key={inquiry.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3 text-sm text-gray-900">
+                      {formatDate(inquiry.createdAt)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-900">{inquiry.name}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{inquiry.email}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">{inquiry.phone}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {getJobCategoryLabel(inquiry.jobCategory)}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {getIndustryLabel(inquiry.industry)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${statusColors[inquiry.status]}`}
+                      >
+                        {inquiry.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/admin/${inquiry.id}`}
+                        className="text-sm text-primary hover:underline"
+                      >
+                        詳細
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </main>
     </div>
   );

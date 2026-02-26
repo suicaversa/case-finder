@@ -1,0 +1,55 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Inquiry {
+  id                  String        @id @default(cuid())
+  name                String
+  email               String
+  phone               String
+  companyName         String?
+  companyUrl          String?
+  jobCategory         String
+  jobCategoryOther    String?
+  industry            String
+  industryOther       String?
+  consultationContent String?
+  status              String        @default("未対応")
+  shownCaseIds        String[]
+  notes               String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  chatMessages        ChatMessage[]
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  inquiryId String
+  inquiry   Inquiry  @relation(fields: [inquiryId], references: [id], onDelete: Cascade)
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+}
+
+model CaseStudy {
+  id               String   @id @default(cuid())
+  title            String
+  background       String
+  requestedContent String
+  actualServices   Json
+  contractPlan     String
+  imageUrl         String
+  jobCategories    String[]
+  industries       String[]
+}

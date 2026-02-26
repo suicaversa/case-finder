@@ -1,92 +1,249 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { ChatMessage } from '@/types';
-import { generateAIComment, getCategoryLabel, getIndustryLabel } from '@/lib/aiComment';
+import { generateAIComment } from '@/lib/aiComment';
 
 interface Props {
   jobCategory: string;
   industry: string;
   consultationContent?: string;
+  inquiryId?: string | null;
 }
 
-function generateChatReply(message: string, props: Props): string {
-  const normalized = message.trim();
-  const catMsg = getCategoryLabel(props.jobCategory);
-  const indMsg = getIndustryLabel(props.industry);
-
-  if (/(料金|費用|価格|単価|コスト)/.test(normalized)) {
-    return '料金は業務量や難易度によって変わります。現状の作業量を伺いながら、最適なプランと目安をご案内します。';
-  }
-  if (/(導入|開始|スケジュール|期間|いつから)/.test(normalized)) {
-    return '最短1〜2週間で立ち上げ可能です。必要な情報や引き継ぎ方法を整理しながら進めます。';
-  }
-  if (/(セキュリティ|情報|機密|NDA|権限)/i.test(normalized)) {
-    return 'NDAの締結やアクセス権限の管理、作業ログの記録など、情報管理の体制を整えています。詳細は担当からご説明します。';
-  }
-  if (/(体制|担当|メンバー|チーム)/.test(normalized)) {
-    return `${indMsg}での対応実績があるチームで進めます。${catMsg}に詳しい担当者をアサインしますので、ご安心ください。`;
-  }
-
-  return `${indMsg}の${catMsg}に合わせて柔軟に対応できます。もう少し具体的に「どの業務」「頻度」「目標」を教えていただけると、より詳しくご案内できます。`;
+function AssistantAvatar() {
+  return (
+    <div className="flex-shrink-0">
+      <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+        <svg
+          className="w-8 h-8 text-primary"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+          />
+        </svg>
+      </div>
+      <p className="text-xs text-center text-gray-500 mt-1">担当者</p>
+    </div>
+  );
 }
 
-export function AIComment({ jobCategory, industry, consultationContent }: Props) {
-  const comment = generateAIComment({ jobCategory, industry, consultationContent });
+export function AIComment({ jobCategory, industry, consultationContent, inquiryId }: Props) {
+  const fallbackComment = generateAIComment({ jobCategory, industry, consultationContent });
+  const [comment, setComment] = useState(fallbackComment);
+  const [isCommentLoading, setIsCommentLoading] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [inputMessage, setInputMessage] = useState('');
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [streamingText, setStreamingText] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const streamingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const chatMessagesRef = useRef<ChatMessage[]>(chatMessages);
 
-  const handleSendMessage = () => {
-    const trimmed = inputMessage.trim();
+  // chatMessagesRef を常に最新の chatMessages と同期させる
+  useEffect(() => {
+    chatMessagesRef.current = chatMessages;
+  }, [chatMessages]);
+
+  // チャットメッセージをDBに保存する
+  const saveChatMessage = useCallback(async (role: 'user' | 'assistant', content: string) => {
+    if (!inquiryId) return;
+    try {
+      await fetch(`/api/inquiries/${inquiryId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role, content }),
+      });
+    } catch (err) {
+      console.error('Failed to save chat message:', err);
+    }
+  }, [inquiryId]);
+
+  // 初回コメントをGemini APIから取得
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchInitialComment() {
+      try {
+        const res = await fetch('/api/ai/initial-comment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jobCategory, industry, consultationContent }),
+        });
+        if (!res.ok) throw new Error('API error');
+        const data = await res.json();
+        if (!cancelled && data.message) {
+          setComment(data.message);
+        }
+      } catch {
+        // フォールバックのコメントをそのまま使う
+      } finally {
+        if (!cancelled) setIsCommentLoading(false);
+      }
+    }
+    fetchInitialComment();
+    return () => { cancelled = true; };
+  }, [jobCategory, industry, consultationContent, fallbackComment]);
+
+  const scrollToBottom = useCallback(() => {
+    const container = chatContainerRef.current;
+    if (!container) return;
+    container.scrollTop = container.scrollHeight;
+  }, []);
+
+  useEffect(() => {
+    // チャットメッセージ追加時・タイピング開始時のみスクロール（ストリーミング中は除外）
+    scrollToBottom();
+  }, [chatMessages, isBotTyping, scrollToBottom]);
+
+  // ストリーミング中のスクロールは頻度を下げる
+  const lastStreamScrollRef = useRef(0);
+  useEffect(() => {
+    if (!streamingText) return;
+    const now = Date.now();
+    if (now - lastStreamScrollRef.current > 300) {
+      lastStreamScrollRef.current = now;
+      scrollToBottom();
+    }
+  }, [streamingText, scrollToBottom]);
+
+  // Cleanup streaming interval on unmount
+  useEffect(() => {
+    return () => {
+      if (streamingIntervalRef.current) {
+        clearInterval(streamingIntervalRef.current);
+      }
+    };
+  }, []);
+
+  const streamText = useCallback((fullText: string, messageId: string) => {
+    let index = 0;
+    setStreamingText('');
+
+    streamingIntervalRef.current = setInterval(() => {
+      if (index < fullText.length) {
+        setStreamingText(fullText.slice(0, index + 1));
+        index++;
+      } else {
+        if (streamingIntervalRef.current) {
+          clearInterval(streamingIntervalRef.current);
+          streamingIntervalRef.current = null;
+        }
+        setStreamingText('');
+        setChatMessages((prev) => [
+          ...prev,
+          {
+            id: messageId,
+            role: 'assistant',
+            content: fullText,
+            createdAt: new Date().toISOString(),
+          },
+        ]);
+        setIsBotTyping(false);
+        // Save assistant message to DB
+        saveChatMessage('assistant', fullText);
+      }
+    }, 20);
+  }, [saveChatMessage]);
+
+  const callChatAPI = useCallback(async (messages: { role: 'user' | 'assistant'; content: string }[]) => {
+    const res = await fetch('/api/ai/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages,
+        jobCategory,
+        industry,
+        consultationContent,
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`API error: ${res.status}`);
+    }
+
+    const data = await res.json();
+    return data.message as string;
+  }, [jobCategory, industry, consultationContent]);
+
+  const sendMessage = useCallback(async (messageText: string) => {
+    const trimmed = messageText.trim();
     if (!trimmed || isBotTyping) return;
 
-    const now = new Date().toISOString();
+    setError(null);
+    setLastFailedMessage(null);
+
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
       role: 'user',
       content: trimmed,
-      createdAt: now,
+      createdAt: new Date().toISOString(),
     };
 
     setChatMessages((prev) => [...prev, userMessage]);
     setInputMessage('');
     setIsBotTyping(true);
 
-    setTimeout(() => {
-      const reply: ChatMessage = {
-        id: `assistant-${Date.now()}`,
-        role: 'assistant',
-        content: generateChatReply(trimmed, { jobCategory, industry, consultationContent }),
-        createdAt: new Date().toISOString(),
-      };
-      setChatMessages((prev) => [...prev, reply]);
+    // Save user message to DB
+    saveChatMessage('user', trimmed);
+
+    try {
+      // chatMessagesRef.current を使って、常に最新の会話履歴を取得する
+      // （Reactの状態更新が非同期のため、chatMessages はstaleな可能性がある）
+      const allMessages = [...chatMessagesRef.current, userMessage].map((m) => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+      }));
+
+      const replyText = await callChatAPI(allMessages);
+      streamText(replyText, `assistant-${Date.now()}`);
+    } catch {
       setIsBotTyping(false);
-    }, 700);
+      setError('メッセージの送信に失敗しました。');
+      setLastFailedMessage(trimmed);
+    }
+  }, [isBotTyping, callChatAPI, streamText, saveChatMessage]);
+
+  const handleSendMessage = () => {
+    sendMessage(inputMessage);
   };
 
-      return (
+  const handleRetry = useCallback(() => {
+    if (lastFailedMessage) {
+      // 失敗したユーザーメッセージを削除してから再送信
+      // refも同期的に更新して、sendMessage が正しい履歴を参照できるようにする
+      setChatMessages((prev) => {
+        const updated = prev.slice(0, -1);
+        chatMessagesRef.current = updated;
+        return updated;
+      });
+      sendMessage(lastFailedMessage);
+    }
+  }, [lastFailedMessage, sendMessage]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // IME変換中（composing状態）はEnterで送信しない
+    if (e.nativeEvent.isComposing || e.keyCode === 229) {
+      return;
+    }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  return (
     <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
       <div className="flex gap-4">
-        <div className="flex-shrink-0">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-            <svg
-              className="w-8 h-8 text-primary"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
-          </div>
-          <p className="text-xs text-center text-gray-500 mt-1">担当者</p>
-        </div>
+        <AssistantAvatar />
 
         {/* Speech bubble */}
         <div className="flex-1 space-y-3">
@@ -95,13 +252,22 @@ export function AIComment({ jobCategory, industry, consultationContent }: Props)
             <div className="absolute left-0 top-4 -ml-2 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-r-8 border-r-red-50" />
 
             <div className="bg-red-50 rounded-xl p-4">
-              <p className="text-gray-700 whitespace-pre-line text-sm leading-relaxed">{comment}</p>
+              {isCommentLoading ? (
+                <div className="flex items-center gap-2 py-1">
+                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <span className="text-gray-500 text-sm ml-1">AIが事例を分析中...</span>
+                </div>
+              ) : (
+                <p className="text-gray-700 whitespace-pre-line text-sm leading-relaxed">{comment}</p>
+              )}
             </div>
           </div>
 
           {isChatOpen && (
             <div className="space-y-4">
-              <div className="space-y-3">
+              <div ref={chatContainerRef} className="space-y-3 max-h-96 overflow-y-auto scroll-smooth">
                 {chatMessages.map((message) => (
                   <div key={message.id}>
                     {message.role === 'user' ? (
@@ -112,30 +278,22 @@ export function AIComment({ jobCategory, industry, consultationContent }: Props)
                       </div>
                     ) : (
                       <div className="flex gap-4 -ml-20 w-[calc(100%+5rem)]">
-                        <div className="flex-shrink-0">
-                          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-                            <svg
-                              className="w-8 h-8 text-primary"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                              />
-                            </svg>
-                          </div>
-                          <p className="text-xs text-center text-gray-500 mt-1">担当者</p>
-                        </div>
+                        <AssistantAvatar />
                         <div className="flex-1 relative">
                           <div className="absolute left-0 top-4 -ml-2 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-r-8 border-r-red-50" />
                           <div className="bg-red-50 rounded-xl p-4">
                             <p className="text-gray-700 whitespace-pre-line text-sm leading-relaxed">
                               {message.content}
                             </p>
+                            {message.imageUrl && (
+                              <div className="mt-3">
+                                <img
+                                  src={message.imageUrl}
+                                  alt="生成された業務イメージ"
+                                  className="rounded-lg max-w-full h-auto border border-gray-200"
+                                />
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -143,47 +301,70 @@ export function AIComment({ jobCategory, industry, consultationContent }: Props)
                   </div>
                 ))}
 
-                {isBotTyping && (
+                {/* Streaming text display */}
+                {isBotTyping && streamingText && (
                   <div className="flex gap-4 -ml-20 w-[calc(100%+5rem)]">
-                    <div className="flex-shrink-0">
-                      <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
-                        <svg
-                          className="w-8 h-8 text-primary"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                          />
-                        </svg>
-                      </div>
-                      <p className="text-xs text-center text-gray-500 mt-1">担当者</p>
-                    </div>
+                    <AssistantAvatar />
                     <div className="flex-1 relative">
                       <div className="absolute left-0 top-4 -ml-2 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-r-8 border-r-red-50" />
                       <div className="bg-red-50 rounded-xl p-4">
-                        <p className="text-gray-600 text-sm leading-relaxed">入力中...</p>
+                        <p className="text-gray-700 whitespace-pre-line text-sm leading-relaxed">
+                          {streamingText}
+                          <span className="inline-block w-0.5 h-4 bg-gray-400 animate-pulse ml-0.5 align-text-bottom" />
+                        </p>
                       </div>
                     </div>
                   </div>
                 )}
+
+                {/* Typing indicator (before streaming starts) */}
+                {isBotTyping && !streamingText && (
+                  <div className="flex gap-4 -ml-20 w-[calc(100%+5rem)]">
+                    <AssistantAvatar />
+                    <div className="flex-1 relative">
+                      <div className="absolute left-0 top-4 -ml-2 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-r-8 border-r-red-50" />
+                      <div className="bg-red-50 rounded-xl p-4">
+                        <div className="flex items-center gap-1">
+                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Error display with retry */}
+                {error && (
+                  <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                    <span>{error}</span>
+                    {lastFailedMessage && (
+                      <button
+                        type="button"
+                        onClick={handleRetry}
+                        className="ml-auto px-3 py-1 bg-white border border-red-300 rounded text-red-600 hover:bg-red-50 transition-colors text-xs font-medium"
+                      >
+                        再送信
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* scroll anchor handled by chatContainerRef */}
               </div>
 
               <div className="space-y-2">
                 <textarea
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   rows={3}
-                  placeholder="相談内容や気になる点を入力してください"
+                  placeholder="相談内容や気になる点を入力してください（Shift+Enterで改行）"
                   className="w-full bg-white px-4 py-3 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
                 <div className="flex items-center justify-between">
                   <p className="text-xs text-gray-500">
-                    送信内容は担当者にも共有されます（モック）
+                    送信内容は担当者にも共有されます
                   </p>
                   <button
                     type="button"
@@ -202,15 +383,24 @@ export function AIComment({ jobCategory, industry, consultationContent }: Props)
             <button
               type="button"
               onClick={() => setIsChatOpen((prev) => !prev)}
-              className="text-sm text-primary hover:text-primary-dark"
+              className={
+                isChatOpen
+                  ? 'inline-flex items-center gap-1 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-lg px-4 py-2 transition-colors'
+                  : 'text-sm text-primary hover:text-primary-dark'
+              }
             >
-              {isChatOpen ? '閉じる' : '会話を続ける'}
+              {isChatOpen ? (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  チャットを閉じる
+                </>
+              ) : '会話を続ける'}
             </button>
           </div>
         </div>
       </div>
     </div>
   );
-
-
 }
