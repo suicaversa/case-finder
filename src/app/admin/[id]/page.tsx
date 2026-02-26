@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, use } from 'react';
 import Link from 'next/link';
-import { mockCases } from '@/data/mockCases';
 import { JOB_CATEGORIES, INDUSTRIES, InquiryStatus, Inquiry } from '@/types';
 import { generateAIComment } from '@/lib/aiComment';
 
@@ -124,7 +123,6 @@ export default function InquiryDetailPage({ params }: { params: Promise<{ id: st
     );
   }
 
-  const shownCases = mockCases.filter((c) => inquiry.shownCaseIds.includes(c.id));
   const chatMessages = inquiry.chatMessages ?? [];
   const aiIntroMessage = generateAIComment({
     jobCategory: inquiry.jobCategory,
@@ -296,50 +294,10 @@ export default function InquiryDetailPage({ params }: { params: Promise<{ id: st
 
         {/* Shown Cases */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            紹介された事例 ({shownCases.length}件)
-          </h2>
-          {shownCases.length > 0 ? (
-            <div className="space-y-4">
-              {shownCases.map((c) => (
-                <div key={c.id} className="bg-gray-50 border border-gray-100 rounded-xl p-5">
-                  <div className="flex flex-col md:flex-row gap-4">
-                    <img
-                      src={`/cases/case-${c.id}.png`}
-                      alt={c.title}
-                      className="w-full md:w-40 h-32 object-contain bg-white rounded"
-                    />
-                    <div className="flex-1 space-y-3">
-                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                        <p className="text-lg font-semibold text-gray-900">{c.title}</p>
-                        <span className="inline-block px-3 py-1 bg-red-100 text-primary text-sm font-medium rounded-full">
-                          {c.contractPlan}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-gray-600 mb-1">依頼された背景</p>
-                        <p className="text-sm text-gray-600">{c.background}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-gray-600 mb-1">依頼内容</p>
-                        <p className="text-sm text-gray-600">{c.requestedContent}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-semibold text-gray-600 mb-1">
-                          HELPYOUが実際に行っている業務
-                        </p>
-                        <p className="text-sm text-gray-600 whitespace-pre-line">
-                          {c.actualServices}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-gray-500">紹介された事例はありません。</p>
-          )}
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">紹介された事例</h2>
+          <p className="text-sm text-gray-500">
+            事例はAIによって動的に生成されています。チャット履歴から表示内容を確認できます。
+          </p>
         </div>
 
         {/* Notes */}

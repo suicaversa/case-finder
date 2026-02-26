@@ -30,8 +30,6 @@ src/
 ├── components/
 │   ├── forms/             # Form components (Step1, Step2, StepIndicator)
 │   └── cases/             # Case display components (CaseCard)
-├── data/
-│   └── mockCases.ts       # Mock case study data
 └── types/
     └── index.ts           # TypeScript types and constants
 ```
@@ -46,7 +44,8 @@ Three-screen system (Admin Dashboard not yet implemented):
 
 2. **Case Introduction Screen** (`/results`) - Main interface
    - Input confirmation section with edit button
-   - Matched case studies display
+   - AI-generated case studies via Dify workflow API (streaming)
+   - AI chat widget for follow-up questions
    - CTA for scheduling service integration
 
 3. **Admin Dashboard** (TODO)
