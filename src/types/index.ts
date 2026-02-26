@@ -52,6 +52,14 @@ export interface CaseStudy {
   industries: string[];
 }
 
+// Dify API case study type
+export interface DifyCaseStudy {
+  title: string;
+  background: string;
+  requestedContent: string;
+  actualServices: string[];
+}
+
 // Constants
 export const JOB_CATEGORIES = [
   { value: 'accounting', label: '経理・会計' },

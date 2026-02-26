@@ -1,19 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
-import { findMatchingCases } from '@/data/mockCases';
 import { getCategoryLabel, getIndustryLabel } from '@/lib/aiComment';
 
-function buildSystemPrompt(jobCategory?: string, industry?: string): string {
-  const matchingCases = findMatchingCases(jobCategory || 'other', industry || 'other');
+interface DifyCaseInput {
+  title: string;
+  background: string;
+  requestedContent: string;
+  actualServices: string[];
+}
 
-  const casesText = matchingCases.map((c) => `【事例: ${c.title}】
+function buildSystemPrompt(displayedCases?: DifyCaseInput[]): string {
+  let casesText = '（事例はまだ読み込まれていません）';
+
+  if (displayedCases && displayedCases.length > 0) {
+    casesText = displayedCases.map((c) => `【事例: ${c.title}】
 背景: ${c.background}
 依頼内容: ${c.requestedContent}
-実際のサービス: ${c.actualServices}
-契約プラン: ${c.contractPlan}
-対応業種: ${c.jobCategories.join(', ')}
-対応業界: ${c.industries.join(', ')}
+実際のサービス: ${c.actualServices.join('、')}
 `).join('\n');
+  }
 
   return `あなたはHELPYOU（ヘルプユー）というオンラインアウトソーシングサービスの事例紹介AIアシスタントです。
 
@@ -28,7 +33,7 @@ ${casesText}
 - 日本語で回答してください
 - 丁寧かつ親しみやすいトーンで回答してください
 - 質問に関連する事例がある場合は、具体的にその事例のタイトルや内容を引用して回答してください
-- 料金について聞かれた場合は、具体的な金額は伝えず営業担当への案内を促しつつ、表示されている事例のプラン名（例: チームプラン（月40時間））に触れてください
+- 料金について聞かれた場合は、具体的な金額は伝えず営業担当への案内を促してください
 - 150〜250文字程度で簡潔に回答してください
 - マークダウンは使わず、プレーンテキストで回答してください`;
 }
@@ -38,6 +43,7 @@ interface ChatRequestBody {
   jobCategory?: string;
   industry?: string;
   consultationContent?: string;
+  displayedCases?: DifyCaseInput[];
 }
 
 function generateFallbackReply(message: string, jobCategory?: string, industry?: string): string {
@@ -64,7 +70,7 @@ function generateFallbackReply(message: string, jobCategory?: string, industry?:
 export async function POST(request: NextRequest) {
   try {
     const body: ChatRequestBody = await request.json();
-    const { messages, jobCategory, industry, consultationContent } = body;
+    const { messages, jobCategory, industry, consultationContent, displayedCases } = body;
 
     if (!messages || messages.length === 0) {
       return NextResponse.json({ error: 'messages is required' }, { status: 400 });
@@ -85,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     // ユーザーのコンテキスト情報をシステムプロンプトに統合する
     // （contents配列を純粋な会話履歴のみにすることで、マルチターンの文脈理解を向上させる）
-    const basePrompt = buildSystemPrompt(jobCategory, industry);
+    const basePrompt = buildSystemPrompt(displayedCases);
     let userContext = `\n\n現在のユーザー情報:\n- 業界: ${indMsg}\n- 業務カテゴリ: ${catMsg}`;
     if (consultationContent) {
       userContext += `\n- 相談内容: ${consultationContent}`;

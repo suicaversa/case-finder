@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { ChatMessage } from '@/types';
+import { ChatMessage, DifyCaseStudy } from '@/types';
 import { generateAIComment } from '@/lib/aiComment';
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
   industry: string;
   consultationContent?: string;
   inquiryId?: string | null;
+  displayedCases?: DifyCaseStudy[];
 }
 
 function AssistantAvatar() {
@@ -34,7 +35,7 @@ function AssistantAvatar() {
   );
 }
 
-export function AIComment({ jobCategory, industry, consultationContent, inquiryId }: Props) {
+export function AIComment({ jobCategory, industry, consultationContent, inquiryId, displayedCases }: Props) {
   const fallbackComment = generateAIComment({ jobCategory, industry, consultationContent });
   const [comment, setComment] = useState(fallbackComment);
   const [isCommentLoading, setIsCommentLoading] = useState(true);
@@ -163,6 +164,7 @@ export function AIComment({ jobCategory, industry, consultationContent, inquiryI
         jobCategory,
         industry,
         consultationContent,
+        displayedCases,
       }),
     });
 
@@ -172,7 +174,7 @@ export function AIComment({ jobCategory, industry, consultationContent, inquiryI
 
     const data = await res.json();
     return data.message as string;
-  }, [jobCategory, industry, consultationContent]);
+  }, [jobCategory, industry, consultationContent, displayedCases]);
 
   const sendMessage = useCallback(async (messageText: string) => {
     const trimmed = messageText.trim();
