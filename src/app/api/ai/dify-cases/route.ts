@@ -15,7 +15,7 @@ const responseSchema = {
       type: Type.ARRAY,
       items: {
         type: Type.OBJECT,
-        required: ['title', 'background', 'requestedContent', 'actualServices'],
+        required: ['title', 'background', 'requestedContent', 'actualServices', 'flowDiagramPath'],
         properties: {
           title: {
             type: Type.STRING,
@@ -35,6 +35,10 @@ const responseSchema = {
             items: {
               type: Type.STRING,
             },
+          },
+          flowDiagramPath: {
+            type: Type.STRING,
+            description: '業務フロー図の画像パス（事例データに記載されているパスをそのまま使用）',
           },
         },
       },
@@ -60,6 +64,7 @@ const fewShotModelResponse = JSON.stringify({
         '採用担当者と応募者の面接日程調整',
         '合格・不合格通知',
       ],
+      flowDiagramPath: '/case-images/case-study-385-flow.jpg',
     },
     {
       title: 'SNSを駆使した最新のリクルーティングスタイル | HELP YOU 活用事例',
@@ -70,6 +75,7 @@ const fewShotModelResponse = JSON.stringify({
         'スプレッドショットへの入力・更新',
         'スクリーンショット提出からスプレッドシート入力までの一連プロセス実行',
       ],
+      flowDiagramPath: '/case-images/case-study-241-flow.jpg',
     },
     {
       title: '月100時間が10時間に短縮！時間のかかる人事業務はHELP YOUにお任せ',
@@ -80,6 +86,7 @@ const fewShotModelResponse = JSON.stringify({
         '面接実施',
         '面接シート・面接名簿の作成',
       ],
+      flowDiagramPath: '/case-images/case-study-390-flow.jpg',
     },
     {
       title: 'HELP YOU 活用事例：スケジュール・タスク管理代行で業務効率アップを',
@@ -90,6 +97,7 @@ const fewShotModelResponse = JSON.stringify({
         '状況確認と期限管理の可視化',
         'チャットワーク上でのタスク追加とリマインド連絡',
       ],
+      flowDiagramPath: '/case-images/case-study-136-flow.jpg',
     },
     {
       title: '人材採用支援企業 営業活動後に得たヒアリング情報をタイムリーに登録したい',
@@ -100,6 +108,7 @@ const fewShotModelResponse = JSON.stringify({
         '職種分類の知識を持つアシスタントによる求人情報のシステム登録',
         '外注先への送付、先方との連絡対応、返送後の不備チェック',
       ],
+      flowDiagramPath: '/case-images/case-study-213-flow.jpg',
     },
   ],
 });

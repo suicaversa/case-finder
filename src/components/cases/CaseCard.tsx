@@ -9,14 +9,22 @@ interface Props {
 export function CaseCard({ caseStudy }: Props) {
   return (
     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-      {/* Placeholder image */}
-      <div className="relative bg-gray-50 h-48 flex items-center justify-center overflow-hidden">
-        <div className="flex flex-col items-center gap-2 text-gray-400">
-          <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-          </svg>
-          <span className="text-xs">事例イメージ</span>
-        </div>
+      {/* Flow diagram image */}
+      <div className="relative bg-gray-50 flex items-center justify-center overflow-hidden">
+        {caseStudy.flowDiagramPath ? (
+          <img
+            src={caseStudy.flowDiagramPath}
+            alt={`${caseStudy.title} 業務フロー図`}
+            className="w-full h-auto"
+          />
+        ) : (
+          <div className="h-48 flex flex-col items-center justify-center gap-2 text-gray-400 w-full">
+            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            <span className="text-xs">事例イメージ</span>
+          </div>
+        )}
       </div>
 
       <div className="p-6 space-y-4">

@@ -60,6 +60,7 @@ export interface DifyCaseStudy {
   background: string;
   requestedContent: string;
   actualServices: string[];
+  flowDiagramPath: string;
 }
 
 // Constants
