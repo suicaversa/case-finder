@@ -149,8 +149,8 @@ export default function ResultsPage() {
       setIsComplete(true);
       setIsStreaming(false);
 
-      // Save to DB
-      patchInquiry({ generatedCases: parsed });
+      // Save only the cases visible to the user
+      patchInquiry({ generatedCases: parsed.slice(0, CASES_PER_PAGE) });
     } catch (err) {
       console.error('Dify streaming error:', err);
       setError('事例の生成中にエラーが発生しました。ページを再読み込みしてください。');
@@ -202,19 +202,20 @@ export default function ResultsPage() {
     const nextVisibleCount = visibleCount + CASES_PER_PAGE;
 
     try {
+      let currentCases = cases;
       if (cases.length >= nextVisibleCount) {
         await new Promise((resolve) => setTimeout(resolve, 1500));
       } else {
         setIsFetchingFromDify(true);
         const existingTitles = cases.map((c) => c.title);
         const moreCases = await fetchDifyCases(inquiry, existingTitles);
-        const updatedCases = [...cases, ...moreCases];
-        setCases(updatedCases);
-        // Save all cases to DB
-        patchInquiry({ generatedCases: updatedCases });
+        currentCases = [...cases, ...moreCases];
+        setCases(currentCases);
       }
       setVisibleCount(nextVisibleCount);
       setLoadMoreCount((prev) => prev + 1);
+      // Save only the cases visible to the user
+      patchInquiry({ generatedCases: currentCases.slice(0, nextVisibleCount) });
     } catch (err) {
       console.error('Load more error:', err);
     } finally {
