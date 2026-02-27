@@ -96,11 +96,19 @@ export async function POST(request: NextRequest) {
     if (consultationContent) {
       userContext += `\n- 相談内容: ${consultationContent}`;
     }
-    const fullSystemPrompt = basePrompt + userContext;
+    let fullSystemPrompt = basePrompt + userContext;
 
-    // contents配列には会話履歴のみを含める（余分なコンテキストメッセージを混ぜない）
-    // これによりGeminiがマルチターンの会話の流れを正しく追跡できる
-    const contents = messages.map((m) => ({
+    // 先頭のassistantメッセージ（初回コメント）はGemini APIのcontentsに入れられない
+    // （Geminiは最初のメッセージがuserロールである必要がある）
+    // → システムプロンプトに組み込んで文脈を維持する
+    let conversationMessages = [...messages];
+    if (conversationMessages.length > 0 && conversationMessages[0].role === 'assistant') {
+      const initialComment = conversationMessages[0].content;
+      fullSystemPrompt += `\n\nあなたが最初にユーザーに送った挨拶メッセージ（表示済み）:\n「${initialComment}」\n\nこの挨拶の文脈を踏まえて、ユーザーとの会話を自然に続けてください。`;
+      conversationMessages = conversationMessages.slice(1);
+    }
+
+    const contents = conversationMessages.map((m) => ({
       role: m.role === 'user' ? 'user' as const : 'model' as const,
       parts: [{ text: m.content }],
     }));
