@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { Suspense, useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ContactInfo, BusinessInfo, FormData } from '@/types';
 import { Step1BusinessForm } from '@/components/forms/Step1ContactForm';
@@ -36,6 +36,14 @@ const debugBusinessInfo: BusinessInfo = {
 };
 
 export default function Home() {
+  return (
+    <Suspense>
+      <HomeContent />
+    </Suspense>
+  );
+}
+
+function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isDebug = searchParams.get('debug') === 'true';
