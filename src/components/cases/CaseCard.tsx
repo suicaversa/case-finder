@@ -91,16 +91,6 @@ export function CaseCard({ caseStudy }: Props) {
         </div>
       )}
 
-      {/* Recommendation reason callout */}
-      {caseStudy.recommendationReason && (
-        <div className="bg-red-50 border-l-4 border-primary px-4 py-3">
-          <p className="text-sm text-gray-700">
-            <span className="font-semibold text-primary">紹介理由：</span>
-            {caseStudy.recommendationReason}
-          </p>
-        </div>
-      )}
-
       <div className="p-6 space-y-4">
         {/* Title */}
         <h3 className="text-lg font-bold text-gray-900">{caseStudy.title}</h3>
@@ -129,6 +119,16 @@ export function CaseCard({ caseStudy }: Props) {
             ))}
           </ul>
         </div>
+
+        {/* Recommendation reason callout */}
+        {caseStudy.recommendationReason && (
+          <div className="bg-red-50 border-l-4 border-primary rounded-r-lg px-4 py-3">
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold text-primary">紹介理由：</span>
+              {caseStudy.recommendationReason}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

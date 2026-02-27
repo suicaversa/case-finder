@@ -35,7 +35,7 @@ export default function ResultsPage() {
 
   // Pagination state
   const CASES_PER_PAGE = 2;
-  const MAX_LOAD_MORE_CLICKS = 3;
+  const MAX_LOAD_MORE_CLICKS = 1;
   const [visibleCount, setVisibleCount] = useState(CASES_PER_PAGE);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isFetchingFromDify, setIsFetchingFromDify] = useState(false);
