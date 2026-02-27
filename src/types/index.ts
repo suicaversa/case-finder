@@ -61,6 +61,7 @@ export interface DifyCaseStudy {
   requestedContent: string;
   actualServices: string[];
   flowDiagramPath: string;
+  recommendationReason?: string;
 }
 
 // Constants

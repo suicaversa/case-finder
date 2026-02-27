@@ -40,6 +40,10 @@ const responseSchema = {
             type: Type.STRING,
             description: '業務フロー図の画像パス（事例データに記載されているパスをそのまま使用）',
           },
+          recommendationReason: {
+            type: Type.STRING,
+            description: 'この事例をお客様に紹介する理由（お客様の状況と事例の関連性を80文字程度で説明）',
+          },
         },
       },
     },
@@ -65,6 +69,7 @@ const fewShotModelResponse = JSON.stringify({
         '合格・不合格通知',
       ],
       flowDiagramPath: '/case-images/case-study-385-flow.jpg',
+      recommendationReason: '不動産業界での採用業務効率化の実績があり、ご相談いただいた新卒採用のアウトソースに直接関連する事例です。',
     },
     {
       title: 'SNSを駆使した最新のリクルーティングスタイル',
@@ -76,6 +81,7 @@ const fewShotModelResponse = JSON.stringify({
         'スクリーンショット提出からスプレッドシート入力までの一連プロセス実行',
       ],
       flowDiagramPath: '/case-images/case-study-241-flow.jpg',
+      recommendationReason: '新卒採用においてSNSを活用した候補者発掘は重要な手法であり、人事・労務担当者の情報収集負担を軽減できる事例です。',
     },
     {
       title: '月100時間が10時間に短縮！時間のかかる人事業務をアウトソーシングで効率化',
@@ -87,6 +93,7 @@ const fewShotModelResponse = JSON.stringify({
         '面接シート・面接名簿の作成',
       ],
       flowDiagramPath: '/case-images/case-study-390-flow.jpg',
+      recommendationReason: '採用面接の調整・実施業務を大幅に削減した実績があり、新卒採用のアウトソースを検討中の人事部門に参考になる事例です。',
     },
     {
       title: 'スケジュール・タスク管理代行で業務効率アップを',
@@ -98,6 +105,7 @@ const fewShotModelResponse = JSON.stringify({
         'チャットワーク上でのタスク追加とリマインド連絡',
       ],
       flowDiagramPath: '/case-images/case-study-136-flow.jpg',
+      recommendationReason: '人事・労務部門では採用以外にもタスク管理の負担が大きく、業務全体の効率化に役立つ周辺業務の改善事例です。',
     },
     {
       title: '人材採用支援企業 営業活動後に得たヒアリング情報をタイムリーに登録したい',
@@ -109,6 +117,7 @@ const fewShotModelResponse = JSON.stringify({
         '外注先への送付、先方との連絡対応、返送後の不備チェック',
       ],
       flowDiagramPath: '/case-images/case-study-213-flow.jpg',
+      recommendationReason: '採用関連のデータ登録・管理業務の代行事例であり、不動産業界の人事部門でも求人情報管理の効率化に応用できます。',
     },
   ],
 });
