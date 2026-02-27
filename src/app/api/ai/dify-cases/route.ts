@@ -19,7 +19,7 @@ const responseSchema = {
         properties: {
           title: {
             type: Type.STRING,
-            description: '事例タイトル',
+            description: '事例タイトル。「HELP YOU」「HELPYOU」「HELP YOU 活用事例：」などのサービス名やブランド名をタイトルに含めないこと。事例の内容のみを簡潔に記述する。',
           },
           background: {
             type: Type.STRING,
@@ -55,7 +55,7 @@ const fewShotUserMessage = `お客様の業種: 不動産
 const fewShotModelResponse = JSON.stringify({
   cases: [
     {
-      title: '採用業務を75分から15分に短縮！「HELP YOU」がワンストップでサポートします',
+      title: '採用業務を75分から15分に短縮！ワンストップでサポートします',
       background: 'ハウスメーカーのクライアントが、採用業務の煩雑な調整作業に時間を取られ、他業務への負担が増加している状況でした。',
       requestedContent: '求人票作成・掲載、応募者一次対応、面接日程調整などの採用業務を効率化したい。',
       actualServices: [
@@ -67,7 +67,7 @@ const fewShotModelResponse = JSON.stringify({
       flowDiagramPath: '/case-images/case-study-385-flow.jpg',
     },
     {
-      title: 'SNSを駆使した最新のリクルーティングスタイル | HELP YOU 活用事例',
+      title: 'SNSを駆使した最新のリクルーティングスタイル',
       background: '採用業務においてSNSを活用したダイレクトリクルーティングが主流化する中、有望人材からの情報発信をキャッチする必要が生じていましたが、情報収集に時間とリソースが必要で社内対応が困難でした。',
       requestedContent: '対象者のSNSからの情報収集、スプレッドシートへの入力・更新作業を代行してほしい。',
       actualServices: [
@@ -78,7 +78,7 @@ const fewShotModelResponse = JSON.stringify({
       flowDiagramPath: '/case-images/case-study-241-flow.jpg',
     },
     {
-      title: '月100時間が10時間に短縮！時間のかかる人事業務はHELP YOUにお任せ',
+      title: '月100時間が10時間に短縮！時間のかかる人事業務をアウトソーシングで効率化',
       background: 'スポーツジム経営企業で、学生アルバイトの定着率が低く店舗スタッフが慢性的に不足。アルバイト面接対応に時間を取られ、他の業務が圧迫されていました。',
       requestedContent: '求人サイトへの掲載、応募者の面接調整、ツール管理による応募者受付などを代行してほしい。',
       actualServices: [
@@ -89,7 +89,7 @@ const fewShotModelResponse = JSON.stringify({
       flowDiagramPath: '/case-images/case-study-390-flow.jpg',
     },
     {
-      title: 'HELP YOU 活用事例：スケジュール・タスク管理代行で業務効率アップを',
+      title: 'スケジュール・タスク管理代行で業務効率アップを',
       background: 'SNSコンサルティング業務のクライアントが、複数事業管轄と多数のプロジェクト並行実施により、タスク漏れやスケジュールのダブルブッキングに悩まされていました。',
       requestedContent: 'チャットワーク15部屋分のタスク確認にかかる多大な手間を削減し、タスク管理を一元化したい。',
       actualServices: [
