@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
     const dynamicMaxTokens = Math.max(4096, estimatedInputTokens + 2048);
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-flash-lite-latest',
       contents,
       config: {
         systemInstruction: fullSystemPrompt,

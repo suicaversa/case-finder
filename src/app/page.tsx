@@ -54,10 +54,26 @@ export default function Home() {
     setIsSubmitting(true);
     try {
       const formData: FormData = { ...contactInfo, ...businessInfo };
-      sessionStorage.setItem('caseFinderFormData', JSON.stringify(formData));
-      // Clear previous inquiry ID so a new one is created for the new submission
-      sessionStorage.removeItem('caseFinderInquiryId');
-      router.push('/results');
+      const res = await fetch('/api/inquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          companyName: formData.companyName,
+          companyUrl: formData.companyUrl,
+          jobCategory: formData.jobCategory,
+          jobCategoryOther: formData.jobCategoryOther,
+          industry: formData.industry,
+          industryOther: formData.industryOther,
+          consultationContent: formData.consultationContent,
+          shownCaseIds: [],
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to create inquiry');
+      const inquiry = await res.json();
+      router.push(`/results/${inquiry.id}`);
     } catch {
       setIsSubmitting(false);
     }

@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     userPrompt += '\n\nHELPYOUの事例を踏まえて、私の状況に合った初回の挨拶と事例紹介をお願いします。';
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-flash-lite-latest',
       contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
       config: {
         systemInstruction: SYSTEM_PROMPT,

@@ -28,6 +28,8 @@ model Inquiry {
   status              String        @default("未対応")
   shownCaseIds        String[]
   notes               String?
+  generatedCases      Json?
+  initialComment      String?
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
   chatMessages        ChatMessage[]

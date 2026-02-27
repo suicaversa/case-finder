@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "prisma:migrate:production": "DATABASE_URL=\"$DATABASE_URL_DIRECT\" npx prisma migrate deploy"
   },
   "dependencies": {
     "@google/genai": "^1.39.0",

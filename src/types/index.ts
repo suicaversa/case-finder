@@ -36,6 +36,8 @@ export interface Inquiry extends FormData {
   status: InquiryStatus;
   shownCaseIds: string[];
   notes: string;
+  generatedCases: DifyCaseStudy[] | null;
+  initialComment: string | null;
   chatMessages: ChatMessage[];
 }
 

@@ -15,6 +15,12 @@ fi
 
 IMAGE_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO}/${SERVICE_NAME}:${IMAGE_TAG}"
 
+# --- GCP Secret Manager secret names (JIREIAI_ prefix) ---
+# Secrets must be created in advance:
+#   gcloud secrets create JIREIAI_GEMINI_API_KEY --data-file=-
+#   gcloud secrets create JIREIAI_DIFY_API_KEY   --data-file=-
+#   gcloud secrets create JIREIAI_DATABASE_URL   --data-file=-
+
 if ! gcloud artifacts repositories describe "${REPO}" --location "${REGION}" >/dev/null 2>&1; then
   echo "Artifact Registry repo '${REPO}' not found in ${REGION}. Creating..."
   gcloud artifacts repositories create "${REPO}" \
@@ -32,6 +38,7 @@ DEPLOY_FLAGS=(
   --region "${REGION}"
   --platform managed
   --set-env-vars "NODE_ENV=production,NEXT_TELEMETRY_DISABLED=1"
+  --set-secrets "GEMINI_API_KEY=JIREIAI_GEMINI_API_KEY:latest,DIFY_API_KEY=JIREIAI_DIFY_API_KEY:latest,DATABASE_URL=JIREIAI_DATABASE_URL:latest"
 )
 
 if [[ "${ALLOW_UNAUTHENTICATED}" == "true" ]]; then

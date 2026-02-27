@@ -10,6 +10,9 @@ interface Props {
   consultationContent?: string;
   inquiryId?: string | null;
   displayedCases?: DifyCaseStudy[];
+  initialComment?: string | null;
+  existingChatMessages?: ChatMessage[];
+  onInitialCommentResolved?: (comment: string) => void;
 }
 
 function AssistantAvatar() {
@@ -35,14 +38,16 @@ function AssistantAvatar() {
   );
 }
 
-export function AIComment({ jobCategory, industry, consultationContent, inquiryId, displayedCases }: Props) {
+export function AIComment({ jobCategory, industry, consultationContent, inquiryId, displayedCases, initialComment: initialCommentProp, existingChatMessages, onInitialCommentResolved }: Props) {
   const fallbackComment = generateAIComment({ jobCategory, industry, consultationContent });
-  const [comment, setComment] = useState(fallbackComment);
-  const [isCommentLoading, setIsCommentLoading] = useState(true);
+  const [comment, setComment] = useState(initialCommentProp || fallbackComment);
+  const [isCommentLoading, setIsCommentLoading] = useState(!initialCommentProp);
+  const onInitialCommentResolvedRef = useRef(onInitialCommentResolved);
+  onInitialCommentResolvedRef.current = onInitialCommentResolved;
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [inputMessage, setInputMessage] = useState('');
   const [isBotTyping, setIsBotTyping] = useState(false);
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(existingChatMessages || []);
   const [streamingText, setStreamingText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
@@ -69,30 +74,34 @@ export function AIComment({ jobCategory, industry, consultationContent, inquiryI
     }
   }, [inquiryId]);
 
-  // 初回コメントをGemini APIから取得
+  // 初回コメントをGemini APIから取得（DB に保存済みの場合はスキップ）
   useEffect(() => {
-    let cancelled = false;
+    if (initialCommentProp) return;
+    const abortController = new AbortController();
     async function fetchInitialComment() {
       try {
         const res = await fetch('/api/ai/initial-comment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ jobCategory, industry, consultationContent }),
+          signal: abortController.signal,
         });
         if (!res.ok) throw new Error('API error');
         const data = await res.json();
-        if (!cancelled && data.message) {
+        if (data.message) {
           setComment(data.message);
+          onInitialCommentResolvedRef.current?.(data.message);
         }
-      } catch {
+      } catch (err) {
+        if ((err as Error).name === 'AbortError') return;
         // フォールバックのコメントをそのまま使う
       } finally {
-        if (!cancelled) setIsCommentLoading(false);
+        if (!abortController.signal.aborted) setIsCommentLoading(false);
       }
     }
     fetchInitialComment();
-    return () => { cancelled = true; };
-  }, [jobCategory, industry, consultationContent, fallbackComment]);
+    return () => { abortController.abort(); };
+  }, [jobCategory, industry, consultationContent, initialCommentProp]);
 
   const scrollToBottom = useCallback(() => {
     const container = chatContainerRef.current;

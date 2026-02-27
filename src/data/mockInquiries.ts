@@ -44,6 +44,8 @@ export const mockInquiries: Inquiry[] = [
       },
     ],
     notes: '',
+    generatedCases: null,
+    initialComment: null,
   },
   {
     id: 'inq-002',
@@ -75,6 +77,8 @@ export const mockInquiries: Inquiry[] = [
       },
     ],
     notes: '2/3 電話済み。来週打ち合わせ予定。',
+    generatedCases: null,
+    initialComment: null,
   },
   {
     id: 'inq-003',
@@ -92,6 +96,8 @@ export const mockInquiries: Inquiry[] = [
     shownCaseIds: ['3', '7'],
     chatMessages: [],
     notes: '2/2 契約締結。チームプラン（月30時間）で開始。',
+    generatedCases: null,
+    initialComment: null,
   },
   {
     id: 'inq-004',
@@ -123,6 +129,8 @@ export const mockInquiries: Inquiry[] = [
       },
     ],
     notes: '',
+    generatedCases: null,
+    initialComment: null,
   },
   {
     id: 'inq-005',
@@ -154,5 +162,7 @@ export const mockInquiries: Inquiry[] = [
       },
     ],
     notes: '2/1 初回ヒアリング完了。提案書作成中。',
+    generatedCases: null,
+    initialComment: null,
   },
 ];

@@ -36,6 +36,8 @@ export async function PATCH(
     if (body.status !== undefined) data.status = body.status;
     if (body.notes !== undefined) data.notes = body.notes;
     if (body.shownCaseIds !== undefined) data.shownCaseIds = body.shownCaseIds;
+    if (body.generatedCases !== undefined) data.generatedCases = body.generatedCases;
+    if (body.initialComment !== undefined) data.initialComment = body.initialComment;
 
     const inquiry = await prisma.inquiry.update({
       where: { id },
