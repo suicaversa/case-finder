@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
 import { DifyCaseStudy } from '@/types';
 
 interface Props {
@@ -16,6 +17,31 @@ function normalizeFlowDiagramPath(path: string | undefined): string | null {
 
 export function CaseCard({ caseStudy }: Props) {
   const imagePath = normalizeFlowDiagramPath(caseStudy.flowDiagramPath);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+
+  const closeLightbox = useCallback(() => setLightboxOpen(false), []);
+
+  // Escape key to close
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeLightbox();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxOpen, closeLightbox]);
+
+  // Prevent body scroll when lightbox is open
+  useEffect(() => {
+    if (lightboxOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [lightboxOpen]);
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
@@ -25,7 +51,8 @@ export function CaseCard({ caseStudy }: Props) {
           <img
             src={imagePath}
             alt={`${caseStudy.title} 業務フロー図`}
-            className="w-full h-auto"
+            className="w-full h-auto cursor-pointer transition-opacity hover:opacity-80"
+            onClick={() => setLightboxOpen(true)}
           />
         ) : (
           <div className="h-48 flex flex-col items-center justify-center gap-2 text-gray-400 w-full">
@@ -36,6 +63,33 @@ export function CaseCard({ caseStudy }: Props) {
           </div>
         )}
       </div>
+
+      {/* Lightbox overlay */}
+      {lightboxOpen && imagePath && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+          onClick={closeLightbox}
+        >
+          {/* Close button */}
+          <button
+            className="absolute top-4 right-4 z-10 text-white hover:text-gray-300 transition-colors"
+            onClick={closeLightbox}
+            aria-label="閉じる"
+          >
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          {/* Enlarged image */}
+          <img
+            src={imagePath}
+            alt={`${caseStudy.title} 業務フロー図`}
+            className="max-w-[95vw] max-h-[95vh] object-contain touch-manipulation"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
 
       <div className="p-6 space-y-4">
         {/* Title */}
