@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, use } from 'react';
 import Link from 'next/link';
 import { JOB_CATEGORIES, INDUSTRIES, InquiryStatus, Inquiry } from '@/types';
 import { generateAIComment } from '@/lib/aiComment';
+import { CaseCard } from '@/components/cases/CaseCard';
 
 const statusColors: Record<InquiryStatus, string> = {
   '未対応': 'bg-red-100 text-red-800 border-red-200',
@@ -297,9 +298,15 @@ export default function InquiryDetailPage({ params }: { params: Promise<{ id: st
         {/* Shown Cases */}
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">紹介された事例</h2>
-          <p className="text-sm text-gray-500">
-            事例はAIによって動的に生成されています。チャット履歴から表示内容を確認できます。
-          </p>
+          {inquiry.generatedCases && inquiry.generatedCases.length > 0 ? (
+            <div className="grid md:grid-cols-2 gap-4">
+              {inquiry.generatedCases.map((c, idx) => (
+                <CaseCard key={idx} caseStudy={c} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">事例はまだ生成されていません。</p>
+          )}
         </div>
 
         {/* Notes */}
