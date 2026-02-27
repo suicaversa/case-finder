@@ -88,7 +88,10 @@ export default function ResultsPage() {
         try {
           const event = JSON.parse(dataStr);
 
-          if (event.event === 'text_chunk') {
+          if (event.event === 'error') {
+            console.error('[SSE] Server error event:', event.data);
+            throw new Error(event.data?.message || 'Server returned an error');
+          } else if (event.event === 'text_chunk') {
             const chunk = event.data?.text || '';
             setStreamingText((prev) => prev + chunk);
           } else if (event.event === 'workflow_finished') {
@@ -101,14 +104,18 @@ export default function ResultsPage() {
                 try {
                   const obj = JSON.parse(source);
                   result = obj.cases || [];
-                } catch {
-                  // ignore parse error
+                } catch (e) {
+                  console.error('[SSE] Failed to parse structured_output string:', e, source);
                 }
+              } else {
+                console.warn('[SSE] workflow_finished but no cases found in outputs:', outputs);
               }
+            } else {
+              console.warn('[SSE] workflow_finished but outputs is empty:', event.data);
             }
           }
-        } catch {
-          // Skip malformed JSON lines
+        } catch (e) {
+          console.error('[SSE] Failed to parse event line:', dataStr, e);
         }
       }
     }

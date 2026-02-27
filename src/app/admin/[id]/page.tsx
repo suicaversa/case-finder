@@ -123,6 +123,8 @@ export default function InquiryDetailPage({ params }: { params: Promise<{ id: st
     );
   }
 
+  const hasUnsavedChanges = status !== inquiry.status || notes !== (inquiry.notes || '');
+
   const chatMessages = inquiry.chatMessages ?? [];
   const aiIntroMessage = generateAIComment({
     jobCategory: inquiry.jobCategory,
@@ -312,26 +314,33 @@ export default function InquiryDetailPage({ params }: { params: Promise<{ id: st
           />
         </div>
 
-        {/* Save Button */}
-        <div className="flex items-center justify-end gap-4">
-          {saveMessage && (
-            <span
-              className={`text-sm ${
-                saveMessage.includes('失敗') ? 'text-red-600' : 'text-green-600'
-              }`}
-            >
-              {saveMessage}
-            </span>
-          )}
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="px-6 py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50 transition-colors"
-          >
-            {isSaving ? '保存中...' : '保存する'}
-          </button>
-        </div>
+        {/* Spacer for sticky save bar */}
+        {hasUnsavedChanges && <div className="h-20" />}
       </main>
+
+      {/* Sticky Save Bar - only visible when there are unsaved changes */}
+      {hasUnsavedChanges && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.06)] z-50">
+          <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-end gap-4">
+            {saveMessage && (
+              <span
+                className={`text-sm ${
+                  saveMessage.includes('失敗') ? 'text-red-600' : 'text-green-600'
+                }`}
+              >
+                {saveMessage}
+              </span>
+            )}
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="px-6 py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50 transition-colors"
+            >
+              {isSaving ? '保存中...' : '保存する'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
