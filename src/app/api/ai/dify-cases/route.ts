@@ -122,14 +122,19 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const { industry, job_category, detail } = await request.json();
+  const { industry, job_category, detail, existingCaseTitles } = await request.json();
 
   const ai = new GoogleGenAI({ apiKey });
 
-  const userMessage = `お客様の業種: ${industry}
+  let userMessage = `お客様の業種: ${industry}
 お困りの業務の種類: ${job_category}
 お困りの内容(詳細):
   ${detail || '特になし'}`;
+
+  if (Array.isArray(existingCaseTitles) && existingCaseTitles.length > 0) {
+    const titleList = existingCaseTitles.map((t: string) => `- ${t}`).join('\n');
+    userMessage += `\n\n※以下の事例は既に紹介済みのため、これら以外の事例を紹介してください：\n${titleList}`;
+  }
 
   const stream = new ReadableStream({
     async start(controller) {

@@ -42,7 +42,7 @@ export default function ResultsPage() {
   const [loadMoreCount, setLoadMoreCount] = useState(0);
 
   // Parse Dify SSE stream and return parsed cases
-  const fetchDifyCases = useCallback(async (data: FormData): Promise<DifyCaseStudy[]> => {
+  const fetchDifyCases = useCallback(async (data: FormData, existingCaseTitles: string[] = []): Promise<DifyCaseStudy[]> => {
     const jcLabel =
       JOB_CATEGORIES.find((c) => c.value === data.jobCategory)?.label ||
       data.jobCategoryOther ||
@@ -59,6 +59,7 @@ export default function ResultsPage() {
         industry: indLabel,
         job_category: jcLabel,
         detail: data.consultationContent || '',
+        existingCaseTitles,
       }),
     });
 
@@ -205,7 +206,8 @@ export default function ResultsPage() {
         await new Promise((resolve) => setTimeout(resolve, 1500));
       } else {
         setIsFetchingFromDify(true);
-        const moreCases = await fetchDifyCases(inquiry);
+        const existingTitles = cases.map((c) => c.title);
+        const moreCases = await fetchDifyCases(inquiry, existingTitles);
         const updatedCases = [...cases, ...moreCases];
         setCases(updatedCases);
         // Save all cases to DB
