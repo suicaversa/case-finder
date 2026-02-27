@@ -19,7 +19,7 @@ const responseSchema = {
         properties: {
           title: {
             type: Type.STRING,
-            description: '事例タイトル。「HELP YOU」「HELPYOU」「HELP YOU 活用事例：」などのサービス名やブランド名をタイトルに含めないこと。事例の内容のみを簡潔に記述する。',
+            description: '事例タイトル。事例データの記事タイトルや見出しをそのまま使わず、事例の内容から「業種×課題→改善結果」が伝わるタイトルを独自に生成する（例:「リフォーム会社の採用業務を一次選考から面談調整まで代行」）。キャッチコピー調（「〜へお任せ」「〜で効率アップ！」）やサービス名は禁止。',
           },
           background: {
             type: Type.STRING,
@@ -59,7 +59,7 @@ const fewShotUserMessage = `お客様の業種: 不動産
 const fewShotModelResponse = JSON.stringify({
   cases: [
     {
-      title: '採用業務を75分から15分に短縮！ワンストップでサポートします',
+      title: 'ハウスメーカーの採用業務を求人作成から合否通知まで一括代行',
       background: 'ハウスメーカーのクライアントが、採用業務の煩雑な調整作業に時間を取られ、他業務への負担が増加している状況でした。',
       requestedContent: '求人票作成・掲載、応募者一次対応、面接日程調整などの採用業務を効率化したい。',
       actualServices: [
@@ -72,7 +72,7 @@ const fewShotModelResponse = JSON.stringify({
       recommendationReason: '不動産業界での採用業務効率化の実績があり、ご相談いただいた新卒採用のアウトソースに直接関連する事例です。',
     },
     {
-      title: 'SNSを駆使した最新のリクルーティングスタイル',
+      title: 'SNS情報収集によるダイレクトリクルーティング支援',
       background: '採用業務においてSNSを活用したダイレクトリクルーティングが主流化する中、有望人材からの情報発信をキャッチする必要が生じていましたが、情報収集に時間とリソースが必要で社内対応が困難でした。',
       requestedContent: '対象者のSNSからの情報収集、スプレッドシートへの入力・更新作業を代行してほしい。',
       actualServices: [
@@ -84,7 +84,7 @@ const fewShotModelResponse = JSON.stringify({
       recommendationReason: '新卒採用においてSNSを活用した候補者発掘は重要な手法であり、人事・労務担当者の情報収集負担を軽減できる事例です。',
     },
     {
-      title: '月100時間が10時間に短縮！時間のかかる人事業務をアウトソーシングで効率化',
+      title: 'スポーツジムのアルバイト採用面接を手配から実施まで代行',
       background: 'スポーツジム経営企業で、学生アルバイトの定着率が低く店舗スタッフが慢性的に不足。アルバイト面接対応に時間を取られ、他の業務が圧迫されていました。',
       requestedContent: '求人サイトへの掲載、応募者の面接調整、ツール管理による応募者受付などを代行してほしい。',
       actualServices: [
@@ -96,7 +96,7 @@ const fewShotModelResponse = JSON.stringify({
       recommendationReason: '採用面接の調整・実施業務を大幅に削減した実績があり、新卒採用のアウトソースを検討中の人事部門に参考になる事例です。',
     },
     {
-      title: 'スケジュール・タスク管理代行で業務効率アップを',
+      title: '複数プロジェクトのタスク・スケジュール管理を一元化',
       background: 'SNSコンサルティング業務のクライアントが、複数事業管轄と多数のプロジェクト並行実施により、タスク漏れやスケジュールのダブルブッキングに悩まされていました。',
       requestedContent: 'チャットワーク15部屋分のタスク確認にかかる多大な手間を削減し、タスク管理を一元化したい。',
       actualServices: [
@@ -108,7 +108,7 @@ const fewShotModelResponse = JSON.stringify({
       recommendationReason: '人事・労務部門では採用以外にもタスク管理の負担が大きく、業務全体の効率化に役立つ周辺業務の改善事例です。',
     },
     {
-      title: '人材採用支援企業 営業活動後に得たヒアリング情報をタイムリーに登録したい',
+      title: '人材採用支援企業の求人情報システム登録を代行',
       background: '人材採用支援企業が、営業活動後に得たヒアリング情報をタイムリーに登録したいが、登録作業に手間と時間を要し、営業活動に充てるリソースを増やしたいと考えていました。',
       requestedContent: '求人管理システムを使用した求人情報の登録代行（月平均10件程度）。',
       actualServices: [
