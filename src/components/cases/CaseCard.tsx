@@ -6,14 +6,24 @@ interface Props {
   caseStudy: DifyCaseStudy;
 }
 
+function normalizeFlowDiagramPath(path: string | undefined): string | null {
+  if (!path) return null;
+  // Extract case-study-{ID}-flow.jpg from any malformed path
+  const match = path.match(/(case-study-\d+-flow\.jpe?g)/i);
+  if (!match) return null;
+  return `/case-images/${match[1]}`;
+}
+
 export function CaseCard({ caseStudy }: Props) {
+  const imagePath = normalizeFlowDiagramPath(caseStudy.flowDiagramPath);
+
   return (
     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
       {/* Flow diagram image */}
       <div className="relative bg-gray-50 flex items-center justify-center overflow-hidden">
-        {caseStudy.flowDiagramPath ? (
+        {imagePath ? (
           <img
-            src={caseStudy.flowDiagramPath}
+            src={imagePath}
             alt={`${caseStudy.title} 業務フロー図`}
             className="w-full h-auto"
           />
