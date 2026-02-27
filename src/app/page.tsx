@@ -1,20 +1,33 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ContactInfo, BusinessInfo, FormData } from '@/types';
 import { Step1BusinessForm } from '@/components/forms/Step1ContactForm';
 import { Step2ContactForm } from '@/components/forms/Step2BusinessForm';
 import { StepIndicator } from '@/components/forms/StepIndicator';
 
-// テスト用の初期値（本番ではすべて空にする）
-const initialContactInfo: ContactInfo = {
+const emptyContactInfo: ContactInfo = {
+  name: '',
+  email: '',
+  phone: '',
+};
+
+const emptyBusinessInfo: BusinessInfo = {
+  jobCategory: '',
+  industry: '',
+  companyUrl: '',
+  companyName: '',
+  consultationContent: '',
+};
+
+const debugContactInfo: ContactInfo = {
   name: 'やまだ たろう',
   email: 'yamada@example.co.jp',
   phone: '03-1234-5678',
 };
 
-const initialBusinessInfo: BusinessInfo = {
+const debugBusinessInfo: BusinessInfo = {
   jobCategory: 'accounting',
   industry: 'it-web',
   companyUrl: 'https://example.co.jp',
@@ -24,19 +37,22 @@ const initialBusinessInfo: BusinessInfo = {
 
 export default function Home() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isDebug = searchParams.get('debug') === 'true';
+
   const [step, setStep] = useState<1 | 2>(1);
-  const [contactInfo, setContactInfo] = useState<ContactInfo>(initialContactInfo);
-  const [businessInfo, setBusinessInfo] = useState<BusinessInfo>(initialBusinessInfo);
+  const [contactInfo, setContactInfo] = useState<ContactInfo>(isDebug ? debugContactInfo : emptyContactInfo);
+  const [businessInfo, setBusinessInfo] = useState<BusinessInfo>(isDebug ? debugBusinessInfo : emptyBusinessInfo);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const hasUnsavedChanges = useCallback(() => {
     const businessChanged =
-      businessInfo.jobCategory !== initialBusinessInfo.jobCategory ||
-      businessInfo.industry !== initialBusinessInfo.industry;
+      businessInfo.jobCategory !== '' ||
+      businessInfo.industry !== '';
     const contactChanged =
-      contactInfo.name !== initialContactInfo.name ||
-      contactInfo.email !== initialContactInfo.email ||
-      contactInfo.phone !== initialContactInfo.phone;
+      contactInfo.name !== '' ||
+      contactInfo.email !== '' ||
+      contactInfo.phone !== '';
     return businessChanged || contactChanged;
   }, [contactInfo, businessInfo]);
 
