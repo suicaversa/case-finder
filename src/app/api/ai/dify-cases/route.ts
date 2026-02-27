@@ -15,7 +15,7 @@ const responseSchema = {
       type: Type.ARRAY,
       items: {
         type: Type.OBJECT,
-        required: ['title', 'background', 'requestedContent', 'actualServices', 'flowDiagramPath'],
+        required: ['title', 'background', 'requestedContent', 'actualServices'],
         properties: {
           title: {
             type: Type.STRING,
@@ -165,8 +165,19 @@ export async function POST(request: NextRequest) {
         try {
           const parsed = JSON.parse(fullText);
           cases = parsed.cases || [];
-        } catch {
-          console.error('Failed to parse Gemini response:', fullText);
+        } catch (parseError) {
+          console.error('Failed to parse Gemini response JSON:', parseError);
+          console.error('Raw Gemini response:', fullText);
+          const errorEvent = JSON.stringify({
+            event: 'error',
+            data: { message: 'Failed to parse AI response' },
+          });
+          controller.enqueue(encoder.encode(`data: ${errorEvent}\n\n`));
+          return;
+        }
+
+        if (cases.length === 0) {
+          console.warn('Gemini returned 0 cases. Raw response:', fullText);
         }
 
         const finishedEvent = JSON.stringify({
