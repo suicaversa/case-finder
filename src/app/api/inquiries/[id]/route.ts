@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { verifyAccessToken } from '@/lib/access-token';
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
+
+    // Verify access token from cookie
+    const token = request.cookies.get('inquiry_access')?.value;
+    if (!token || !verifyAccessToken(token, id)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const inquiry = await prisma.inquiry.findUnique({
       where: { id },
       include: { chatMessages: { orderBy: { createdAt: 'asc' } } },
@@ -30,6 +38,13 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
+
+    // Verify access token from cookie
+    const token = request.cookies.get('inquiry_access')?.value;
+    if (!token || !verifyAccessToken(token, id)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const body = await request.json();
 
     const data: Record<string, unknown> = {};

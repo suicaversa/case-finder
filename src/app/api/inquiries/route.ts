@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { generateAccessToken } from '@/lib/access-token';
 
 export async function GET() {
   try {
@@ -45,7 +46,15 @@ export async function POST(request: NextRequest) {
       },
       include: { chatMessages: true },
     });
-    return NextResponse.json(inquiry, { status: 201 });
+    const token = generateAccessToken(inquiry.id);
+    const response = NextResponse.json(inquiry, { status: 201 });
+    response.cookies.set('inquiry_access', token, {
+      path: '/',
+      maxAge: 86400,
+      httpOnly: true,
+      sameSite: 'strict',
+    });
+    return response;
   } catch (error) {
     console.error('Failed to create inquiry:', error);
     return NextResponse.json(

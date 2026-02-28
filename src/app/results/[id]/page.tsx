@@ -20,6 +20,11 @@ export default function ResultsPage() {
   const [inquiry, setInquiry] = useState<InquiryData | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [needsAuth, setNeedsAuth] = useState(false);
+  const [authName, setAuthName] = useState('');
+  const [authPhone, setAuthPhone] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [authSubmitting, setAuthSubmitting] = useState(false);
 
   // Streaming state
   const [streamingText, setStreamingText] = useState('');
@@ -166,6 +171,11 @@ export default function ResultsPage() {
     async function loadInquiry() {
       try {
         const res = await fetch(`/api/inquiries/${id}`);
+        if (res.status === 403) {
+          setNeedsAuth(true);
+          setLoading(false);
+          return;
+        }
         if (!res.ok) {
           setNotFound(true);
           setLoading(false);
@@ -230,6 +240,46 @@ export default function ResultsPage() {
     patchInquiry({ initialComment: comment });
   }, [patchInquiry]);
 
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError('');
+    setAuthSubmitting(true);
+    try {
+      const res = await fetch(`/api/inquiries/${id}/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: authName, phone: authPhone }),
+      });
+      if (!res.ok) {
+        setAuthError('入力された情報が一致しません');
+        setAuthSubmitting(false);
+        return;
+      }
+      // Cookie is now set by the server, re-fetch inquiry data
+      setNeedsAuth(false);
+      setLoading(true);
+      const dataRes = await fetch(`/api/inquiries/${id}`);
+      if (!dataRes.ok) {
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
+      const data: InquiryData = await dataRes.json();
+      setInquiry(data);
+      if (data.generatedCases && data.generatedCases.length > 0) {
+        setCases(data.generatedCases);
+        setIsComplete(true);
+        setResolvedInitialComment(data.initialComment);
+      } else {
+        startStreamingRef.current?.(data);
+      }
+      setLoading(false);
+    } catch {
+      setAuthError('エラーが発生しました。もう一度お試しください。');
+      setAuthSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -244,6 +294,59 @@ export default function ResultsPage() {
             ))}
           </div>
           <p className="text-sm text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (needsAuth) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full mx-4">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2 text-center">本人確認</h2>
+          <p className="text-sm text-gray-600 mb-6 text-center">
+            この結果を表示するには、お申し込み時の担当者名と電話番号を入力してください
+          </p>
+          <form onSubmit={handleVerify} className="space-y-4">
+            <div>
+              <label htmlFor="auth-name" className="block text-sm font-medium text-gray-700 mb-1">
+                担当者名
+              </label>
+              <input
+                id="auth-name"
+                type="text"
+                value={authName}
+                onChange={(e) => setAuthName(e.target.value)}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="山田 太郎"
+              />
+            </div>
+            <div>
+              <label htmlFor="auth-phone" className="block text-sm font-medium text-gray-700 mb-1">
+                電話番号
+              </label>
+              <input
+                id="auth-phone"
+                type="tel"
+                value={authPhone}
+                onChange={(e) => setAuthPhone(e.target.value)}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="03-1234-5678"
+              />
+            </div>
+            {authError && (
+              <p className="text-sm text-red-600 text-center">{authError}</p>
+            )}
+            <button
+              type="submit"
+              disabled={authSubmitting}
+              className="w-full py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50"
+            >
+              {authSubmitting ? '確認中...' : '確認する'}
+            </button>
+          </form>
         </div>
       </div>
     );
@@ -312,12 +415,6 @@ export default function ResultsPage() {
               <span className="text-gray-500">業界：</span>
               <span className="text-gray-900 ml-1">{industryLabel}</span>
             </div>
-            {inquiry.companyUrl && (
-              <div className="col-span-2">
-                <span className="text-gray-500">会社URL：</span>
-                <span className="text-gray-900 ml-1">{inquiry.companyUrl}</span>
-              </div>
-            )}
             {inquiry.consultationContent && (
               <div className="col-span-2">
                 <span className="text-gray-500">相談内容：</span>
